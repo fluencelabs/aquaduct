@@ -1,0 +1,20 @@
+aquavm_pool_size = 2
+tcp_port = 7_773
+websocket_port = 9_993
+http_port = 18_082
+
+[system_services]
+enable = [ "aqua-ipfs", "decider" ]
+
+  [system_services.aqua_ipfs]
+  external_api_multiaddr = "/dns4/kras-ipfs.fluence.dev/tcp/5020"
+  local_api_multiaddr = "/dns4/kras-ipfs.fluence.dev/tcp/5020"
+
+  [system_services.decider]
+  decider_period_sec = 10
+  worker_ipfs_multiaddr = "http://ipfs.fluence.dev"
+  network_api_endpoint = "http://mumbai-polygon.ru:8545"
+  network_id = 80_001
+  start_block = "earliest"
+  matcher_address = "0x12744296ea4DaB29AC8d4e0BD0DAC0548A447033"
+  wallet_key = "0xd195f225a8ced176cd2c6f062d0c291f540bb06e62224865518c5c7571b43e4a"

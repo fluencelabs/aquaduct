@@ -1,0 +1,24 @@
+aqua Utils declares *
+
+-- moves due to implicit canonicalization on the last line
+func optOr(opt: ?string, or: string) -> string:
+  res: *string
+  if opt == nil:
+    res <<-or
+  else:
+    res <<- opt!
+  <- res!    
+
+-- moves due to implicit canonicalization on the last line
+func contains(haystack: []string, needle: string) -> bool:
+  c: *bool
+  for t <- haystack:
+    if t == needle:
+      c <<- true
+  c <<- false
+  <- c!  
+
+-- add is a scalar, so no canonicalization happens, no move
+func pushAll(stream: *string, add: []string):
+  for a <- add:
+    stream <<- a  

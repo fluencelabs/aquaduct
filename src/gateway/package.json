@@ -1,0 +1,18 @@
+{
+  "private": true,
+  "name": "gateway",
+  "description": "Fluence gateway for running aqua function via HTTP methods",
+  "version": "0.0.1",
+  "type": "module",
+  "keywords": [],
+  "scripts": {
+    "start": "node --no-warnings src/dev.js"
+  },
+  "dependencies": {
+    "@fluencelabs/js-client": "0.8.3",
+    "fastify": "4.25.2",
+    "@fastify/rate-limit": "9.1.0",
+    "@sinclair/typebox": "0.32.11",
+    "dotenv": "16.4.2"
+  }
+}

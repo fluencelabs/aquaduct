@@ -1,0 +1,57 @@
+aqua Compute declares *
+
+import Job from "job"
+import Error, Promise from "promise"
+use timeout from "promise" as Promise
+import Worker from "@fluencelabs/aqua-lib/subnet.aqua"
+import pushAll from "utils"
+import Peer from "@fluencelabs/aqua-lib/builtin.aqua"
+
+-- Run compute on a single worker
+ability Compute:
+  job(worker: Worker) -> Job
+
+-- Lift a function that is executed on one worker
+-- start: begin execution on worker (topology is done! so all worker services are there)
+-- yield: join and get optional error on some other peer
+-- yield is going to be executed only after start was executed
+func lift(start: Worker -> (), yield: Worker -> ?Error) -> Compute:
+  
+  job = (worker: Worker) -> Job:
+    run = (promise: Promise) -> Promise:
+      err: *Error
+ 
+      on worker.worker_id! via worker.host_id:
+        -- incur topology hops from the previous whatever place
+        prevErr <- promise.yield()
+        if prevErr == nil:
+           start(worker)
+        else:
+           err <<- prevErr!
+
+      nextYield = func () -> ?Error:
+        errNow = err
+        -- errNow is canonicalized there
+        if errNow == nil:
+          -- Yield only if prev errors are empty
+          pushAll(err, yield(worker))
+        <- err
+
+      <- Promise(yield = nextYield)
+    <- Job(run = run)
+
+  <- Compute(job)  
+
+-- Timeout is checked ON YIELD – as otherwise observation might never happen which makes a little sense
+-- TODO should be just timeout
+func cm_timeout{Compute}(waitForMs: u64, errorMessage: Error) -> Compute:
+  job = (worker: Worker) -> Job:
+    workerJob = Compute.job(worker)
+
+    run = (promise: Promise) -> Promise:
+      workerPromise <- workerJob.run{promise}()
+      <- Promise.timeout{workerPromise}(waitForMs, errorMessage)
+
+    <- Job(run = run)  
+
+  <- Compute(job)    

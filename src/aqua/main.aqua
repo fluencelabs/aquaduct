@@ -1,0 +1,136 @@
+aqua Main
+
+import "@fluencelabs/aqua-lib/builtin.aqua"
+import "@fluencelabs/aqua-lib/subnet.aqua"
+
+use "deals.aqua"
+use "hosts.aqua"
+import "services.aqua"
+
+use "cloudless"
+use "compute"
+import Error from "promise"
+
+-- IMPORTANT: Add exports for all functions that you want to run
+export helloWorld, helloWorldRemote, getInfo, getInfos, haveFun
+
+-- DOCUMENTATION:
+-- https://fluence.dev
+
+
+
+-- example of running services deployed using `fluence deal deploy`
+-- with worker 'myDeployment' which has service 'MyService' with method 'greeting'
+
+export runDeployedServices, showSubnet, haveFun
+
+func haveFun() -> string:
+  deals <- Deals.get()
+  dealId = deals.myDeployment!.dealIdOriginal
+
+  res: *string
+  start = func (w: Worker):
+    res <- Op.concat_strings("Hello from worker ", w.worker_id!)
+
+  yield = func (w: Worker) -> ?Error:
+    -- TODO: find this worker in res...
+    <- nil
+
+  log = (msg: []string):
+    Console.print(msg)  
+
+  comp = Compute.lift(start, yield)
+
+  fn = Cloudless.disjoint_run{comp}([HOST_PEER_ID], Cloudless.wait_for_k(1), log)
+
+  Cloudless.roundtrip{fn}(dealId, ?[HOST_PEER_ID])
+
+  <- res!
+
+data Answer:
+    answer: ?string
+    worker: Worker
+
+func runDeployedServices() -> []Answer:
+    deals <- Deals.get()
+    dealId = deals.myDeployment!.dealIdOriginal
+    answers: *Answer
+    on HOST_PEER_ID:
+        subnet <- Subnet.resolve(dealId)
+    if subnet.success == false:
+        Console.print(["Failed to resolve subnet: ", subnet.error])
+
+    for w <- subnet.workers:
+        if w.worker_id == nil:
+            answers <<- Answer(answer=nil, worker=w)
+        else:
+            on w.worker_id! via w.host_id:
+                answer <- MyService.greeting("fluence")
+                answers <<- Answer(answer=?[answer], worker=w)
+
+    <- answers
+
+data WorkerServices:
+    host_id: string
+    worker_id: ?string
+    services: ?[]string
+    spells: ?[]string
+
+func showSubnet() -> []WorkerServices:
+    deals <- Deals.get()
+    dealId = deals.myDeployment!.dealIdOriginal
+    on HOST_PEER_ID:
+        subnet <- Subnet.resolve(dealId)
+    if subnet.success == false:
+        Console.print(["Failed to resolve subnet: ", subnet.error])
+
+    services: *WorkerServices
+    for w <- subnet.workers:
+        if w.worker_id != nil:
+            on w.worker_id! via w.host_id:
+                -- get list of all services on this worker
+                srvs <- Srv.list()
+
+                -- gather spells and services aliases
+                spells_aliases: *string
+                services_aliases: *string
+                for s <- srvs:
+                    if s.aliases.length != 0:
+                        if s.service_type == "spell":
+                            spells_aliases <<- s.aliases[0]
+                        if s.service_type == "service":
+                            services_aliases <<- s.aliases[0]
+
+                services <<- WorkerServices(host_id=w.host_id, worker_id=w.worker_id, services=?[services_aliases], spells=?[spells_aliases])
+        else:
+            services <<- WorkerServices(host_id=w.host_id, worker_id=nil, services=nil, spells=nil)
+
+    <- services
+
+
+-- local
+func helloWorld(name: string) -> string:
+    <- Op.concat_strings("Hello, ", name)
+
+-- remote
+func helloWorldRemote(name: string) -> string:
+    Console.print(["Before getting to host peer id"])
+    on HOST_PEER_ID:
+        hello_msg <- helloWorld(name)
+        from_msg <- Op.concat_strings(hello_msg, "! From ")
+        from_peer_msg <- Op.concat_strings(from_msg, HOST_PEER_ID)
+    <- from_peer_msg
+
+-- request response
+func getInfo() -> Info, PeerId:
+    on HOST_PEER_ID:
+        info <- Peer.identify()
+    <- info, HOST_PEER_ID
+
+-- iterate through several peers
+func getInfos(peers: []PeerId) -> []Info:
+    infos: *Info
+    for p <- peers:
+        on p:
+            infos <- Peer.identify()
+    <- infos

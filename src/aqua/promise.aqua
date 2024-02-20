@@ -1,0 +1,50 @@
+aqua Promise declares Error, Promise, done, and_then, timeout
+
+-- for Peer.timeout
+import Peer from "@fluencelabs/aqua-lib/builtin.aqua"
+import pushAll from "utils"
+
+alias Error: string
+
+ability Promise:
+  yield: -> ?Error
+
+func done_nil() -> ?Error:
+  <- nil
+
+func done() -> Promise:
+  <- Promise(yield = done_nil)
+
+-- Returns a promise that yields first promise and then second
+func and_then(a: Promise, b: Promise) -> Promise:
+  yield = func () -> ?Error:
+    maybeError: *Error
+    respA <- a.yield()
+    if respA == []:
+      respB <- b.yield()
+      if respB != []:
+        maybeError <<- respB!
+    else:
+      maybeError <<- respA!
+
+    <- maybeError
+
+  <- Promise(yield = yield)  
+
+func timeout{Promise}(waitForMs: u64, errorMessage: Error) -> Promise:
+  yield = func() -> ?Error:
+    timeoutError: *Error
+    maybeError: *Error
+
+    run = ():
+      pushAll(maybeError, Promise.yield())
+      timeoutError <<- ""
+
+    run()
+    par timeoutError <- Peer.timeout(waitForMs, errorMessage)
+
+    if timeoutError! == errorMessage:
+      maybeError <<- errorMessage
+
+    <- maybeError  
+  <- Promise(yield = yield)  

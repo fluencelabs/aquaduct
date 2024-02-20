@@ -1,0 +1,17 @@
+aqua Deals declares *
+
+data Deal:
+    chainNetwork: string
+    chainNetworkId: u64
+    dealId: string
+    dealIdOriginal: string
+    definition: string
+    timestamp: string
+
+data Deals:
+    myDeployment: ?Deal
+
+func get() -> Deals:
+    <- Deals(
+        myDeployment=nil
+    )
