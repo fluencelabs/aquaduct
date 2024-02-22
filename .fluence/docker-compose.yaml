@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=schemas/docker-compose.json
 
-# Defines a multi-containers based application.
+# The Compose file is a YAML file defining a multi-containers based application.
 
 # Documentation: https://github.com/fluencelabs/cli/tree/main/docs/configs/docker-compose.md
 
@@ -31,6 +31,11 @@ services:
       IPFS_PROFILE: server
     volumes:
       - ipfs:/data/ipfs
+    healthcheck:
+      test: ipfs id || exit 1
+      interval: 8s
+      timeout: 10s
+      retries: 20
   postgres:
     image: postgres:14
     ports:
@@ -47,19 +52,28 @@ services:
     volumes:
       - postgres:/var/lib/postgresql/data
   chain-rpc:
-    image: docker.fluence.dev/chain-rpc:main-d95d05b-219-1
+    image: fluencelabs/chain-rpc:0.6.3
     ports:
       - 8545:8545
+    healthcheck:
+      test: "curl -s -X POST 'http://localhost:8545' -H 'Content-Type:
+        application/json' --data '{\"jsonrpc\":\"2.0\",
+        \"method\":\"eth_chainId\", \"params\":[], \"id\":1}' | jq -e '.result
+        != null'"
+      interval: 8s
+      timeout: 10s
+      retries: 20
   chain-deploy-script:
-    image: docker.fluence.dev/chain-deploy-script:main-d95d05b-219-1
+    image: fluencelabs/chain-deploy-script:0.6.3
     environment:
       CHAIN_RPC_URL: http://chain-rpc:8545
       MAX_FAILED_RATIO: "9999"
       IS_MOCKED_RANDOMX: "true"
     depends_on:
-      - chain-rpc
+      chain-rpc:
+        condition: service_healthy
   graph-node:
-    image: graphprotocol/graph-node:v0.33.0
+    image: fluencelabs/graph-node:v0.34.1
     ports:
       - 8000:8000
       - 8001:8001
@@ -67,9 +81,12 @@ services:
       - 8030:8030
       - 8040:8040
     depends_on:
-      - ipfs
-      - postgres
-      - chain-rpc
+      ipfs:
+        condition: service_healthy
+      chain-rpc:
+        condition: service_healthy
+      chain-deploy-script:
+        condition: service_completed_successfully
     environment:
       postgres_host: postgres
       postgres_user: graph-node
@@ -81,22 +98,22 @@ services:
       ETHEREUM_REORG_THRESHOLD: 1
       ETHEREUM_ANCESTOR_COUNT: 1
   subgraph-deploy-script:
-    image: docker.fluence.dev/subgraph-deploy-script-image:main-d95d05b-219-1
+    image: fluencelabs/subgraph-deploy-script:0.6.3
     environment:
       GRAPHNODE_URL: http://graph-node:8020
       IPFS_URL: http://ipfs:5001
     depends_on:
       - graph-node
   nox-0:
-    image: fluencelabs/nox:0.20.0
+    image: fluencelabs/nox:0.20.1
     ports:
       - 7771:7771
       - 9991:9991
     environment:
-      WASM_LOG: info
+      WASM_LOG: debug
       FLUENCE_MAX_SPELL_PARTICLE_TTL: 9s
       FLUENCE_ROOT_KEY_PAIR__PATH: /run/secrets/nox-0
-      RUST_LOG: run-console=trace,aquamarine::log=debug,network=trace,worker_inactive=trace
+      RUST_LOG: chain_connector=debug,run-console=trace,aquamarine::log=debug,network=trace,worker_inactive=trace
     command:
       - --config=/run/configs/nox-0_Config.toml
       - --external-maddrs
@@ -105,24 +122,27 @@ services:
       - --allow-private-ips
       - --local
     depends_on:
-      - ipfs
-      - chain-rpc
-      - chain-deploy-script
+      ipfs:
+        condition: service_healthy
+      chain-rpc:
+        condition: service_healthy
+      chain-deploy-script:
+        condition: service_completed_successfully
     volumes:
       - ./configs/nox-0_Config.toml:/run/configs/nox-0_Config.toml
       - nox-0:/.fluence
     secrets:
       - nox-0
   nox-1:
-    image: fluencelabs/nox:0.20.0
+    image: fluencelabs/nox:0.20.1
     ports:
       - 7772:7772
       - 9992:9992
     environment:
-      WASM_LOG: info
+      WASM_LOG: debug
       FLUENCE_MAX_SPELL_PARTICLE_TTL: 9s
       FLUENCE_ROOT_KEY_PAIR__PATH: /run/secrets/nox-1
-      RUST_LOG: run-console=trace,aquamarine::log=debug,network=trace,worker_inactive=trace
+      RUST_LOG: chain_connector=debug,run-console=trace,aquamarine::log=debug,network=trace,worker_inactive=trace
     command:
       - --config=/run/configs/nox-1_Config.toml
       - --external-maddrs
@@ -131,24 +151,27 @@ services:
       - --allow-private-ips
       - --bootstraps=/dns/nox-0/tcp/7771
     depends_on:
-      - ipfs
-      - chain-rpc
-      - chain-deploy-script
+      ipfs:
+        condition: service_healthy
+      chain-rpc:
+        condition: service_healthy
+      chain-deploy-script:
+        condition: service_completed_successfully
     volumes:
       - ./configs/nox-1_Config.toml:/run/configs/nox-1_Config.toml
       - nox-1:/.fluence
     secrets:
       - nox-1
   nox-2:
-    image: fluencelabs/nox:0.20.0
+    image: fluencelabs/nox:0.20.1
     ports:
       - 7773:7773
       - 9993:9993
     environment:
-      WASM_LOG: info
+      WASM_LOG: debug
       FLUENCE_MAX_SPELL_PARTICLE_TTL: 9s
       FLUENCE_ROOT_KEY_PAIR__PATH: /run/secrets/nox-2
-      RUST_LOG: run-console=trace,aquamarine::log=debug,network=trace,worker_inactive=trace
+      RUST_LOG: chain_connector=debug,run-console=trace,aquamarine::log=debug,network=trace,worker_inactive=trace
     command:
       - --config=/run/configs/nox-2_Config.toml
       - --external-maddrs
@@ -157,9 +180,12 @@ services:
       - --allow-private-ips
       - --bootstraps=/dns/nox-0/tcp/7771
     depends_on:
-      - ipfs
-      - chain-rpc
-      - chain-deploy-script
+      ipfs:
+        condition: service_healthy
+      chain-rpc:
+        condition: service_healthy
+      chain-deploy-script:
+        condition: service_completed_successfully
     volumes:
       - ./configs/nox-2_Config.toml:/run/configs/nox-2_Config.toml
       - nox-2:/.fluence

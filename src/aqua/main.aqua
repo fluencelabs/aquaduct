@@ -28,16 +28,20 @@ func haveFun() -> string:
   deals <- Deals.get()
   dealId = deals.myDeployment!.dealIdOriginal
 
+  log = (msg: []string):
+    co Console.print(msg)  
+
   res: *string
   start = func (w: Worker):
+    log(["About to start working"])
     res <- Op.concat_strings("Hello from worker ", w.worker_id!)
 
   yield = func (w: Worker) -> ?Error:
+    log(["About to join res!"])
+    join res!
     -- TODO: find this worker in res...
     <- nil
 
-  log = (msg: []string):
-    Console.print(msg)  
 
   comp = Compute.lift(start, yield)
 

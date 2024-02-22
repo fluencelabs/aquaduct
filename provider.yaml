@@ -17,7 +17,7 @@ computePeers:
     computeUnits: 32
 
 offers:
-  offer:
+  defaultOffer:
     minPricePerWorkerEpoch: 0.00001
     computePeers:
       - nox-0

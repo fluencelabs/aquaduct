@@ -8,7 +8,7 @@ version: 8
 
 deployments:
   myDeployment:
-    targetWorkers: 1
+    targetWorkers: 3
     pricePerWorkerEpoch: 0.00001
     initialBalance: 0.001
     services: [ myService ]

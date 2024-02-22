@@ -7,14 +7,14 @@ http_port = 18_081
 enable = [ "aqua-ipfs", "decider" ]
 
   [system_services.aqua_ipfs]
-  external_api_multiaddr = "/dns4/kras-ipfs.fluence.dev/tcp/5020"
-  local_api_multiaddr = "/dns4/kras-ipfs.fluence.dev/tcp/5020"
+  external_api_multiaddr = "/ip4/127.0.0.1/tcp/5001"
+  local_api_multiaddr = "/dns4/ipfs/tcp/5001"
 
   [system_services.decider]
   decider_period_sec = 10
-  worker_ipfs_multiaddr = "http://ipfs.fluence.dev"
-  network_api_endpoint = "http://mumbai-polygon.ru:8545"
-  network_id = 80_001
+  worker_ipfs_multiaddr = "/dns4/ipfs/tcp/5001"
+  network_api_endpoint = "http://chain-rpc:8545"
+  network_id = 31_337
   start_block = "earliest"
-  matcher_address = "0x12744296ea4DaB29AC8d4e0BD0DAC0548A447033"
+  matcher_address = "0x68B1D87F95878fE05B998F19b66F4baba5De1aed"
   wallet_key = "0x2bd891b6c70e7f12db46fc63b2fd547a06f455f3b090b099895cafc93ae6a069"
