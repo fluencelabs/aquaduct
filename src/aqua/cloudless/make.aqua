@@ -1,0 +1,145 @@
+aqua Cloudless_Make declares *
+
+import PeerId from "@fluencelabs/aqua-lib/builtin.aqua"
+import Subnet, Worker from "@fluencelabs/aqua-lib/subnet.aqua"
+import Worker as WLibW from "@fluencelabs/aqua-lib/workers.aqua"
+import pushAll, optOr, contains from "../utils"
+import Function, DealId from "core"
+
+import Error, Promise from "../promise"
+import Job, j_timeout from "../job"
+-- use timeout from "job" as Job
+use done from "../promise" as Promise
+import Compute from "../compute"
+
+
+func simple{Compute}(coordinator: ?PeerId, yield: *Worker -> Promise, log: []⊤ -> ()) -> Function:
+
+  deal_run = func (deal_id: DealId) -> Job:
+    ok: *string
+
+    run = func (promise: Promise) -> Promise:
+      -- moves :(
+      host <- optOr(coordinator, HOST_PEER_ID)
+
+      workers: *Worker
+      on host:
+        subnet <- Subnet.resolve(deal_id)
+        log(["Subnet resolved to:", subnet])
+        if subnet.success == false:
+          log(["Subnet resolve failed"])
+        
+
+      for w <- subnet.workers par:
+       on w.host_id:
+         --is_active <- WLibW.is_active(deal_id)
+         is_active = true
+         log(["Hello guys!", is_active])
+         if is_active == false:
+           log(["Deal is inactive on this host, have you deposited enough funds?", w.host_id])
+         else:
+           log(["Deal is active, okay"])  
+
+       log(["Going go ", w.worker_id!, "via", w.host_id])
+       par on w.worker_id! via w.host_id:
+        job <- Compute.job(w)
+        log(["got compute job on", w.worker_id!])
+        p <- job.run(promise)
+        p.yield()
+        workers <<- w
+        
+      on host:
+        y <- yield(workers)
+        y.yield()
+        ok <<- "ok"
+
+      new_yield = func () -> ?Error:
+        join ok!
+        <- nil
+      <- Promise(yield = new_yield)  
+
+    <- Job(run = run)  
+  <- Function(run = deal_run)  
+
+-- Compute: will be triggered on every worker that could be reached. 
+--        If subnet-scale coordination is needed, Compute must conduct it
+-- peers: list of peer ids to build disjoint paths
+-- deal_id: subnet to run Compute on
+-- yield: will run on every peer, should determine when there's enough results from different workers
+func disjoint{Compute}(peers: []PeerId, yield: *Worker -> Promise, log: []string -> ()) -> Function:
+  -- Path to worker
+  ingoing: *PeerId
+  -- path to and from worker
+  outgoing: *[]PeerId
+
+  -- Stream of workers that did the job
+  workers: *Worker
+
+  -- Internal: mutex to run job on every peer only once
+  observed_on: *PeerId
+
+  deal_run = func (deal_id: DealId) -> Job:
+
+    run = func (promise: Promise) -> Promise:
+        parseq p <- peers on p:
+            -- Yield previous job on different peers
+            -- TODO should we yield it on workers instead? I think we don't
+            prev <- promise.yield()
+            -- TODO: consider the error!
+            -- log(prev)
+            co log(["Resolving subnet at:", p])
+
+            -- Independent resolve on every peer -- triggers moving to p
+            res <- Subnet.resolve(deal_id)
+
+            -- Remember the peer: it should be the first local write to ingoing
+            ingoing <<- p
+
+            -- TODO: handle failures, e.g. with timeouts?
+            -- So now we go many times from intermediary peer p to every worker
+            -- We cannot do it outside of parseq, as we need access to res.workers without implicit canonicalization
+            parseq w <- res.workers on w.host_id:
+                co log(["on host", w.host_id])
+                -- Run job only once on every peer
+                if contains(observed_on, w.worker_id!) == false:
+                    -- This peer was reached via another peer
+                    co log(w.worker_id)
+                    observed_on <<- w.worker_id!
+                    -- Job is initiated only once on every peer
+                    co log([w.worker_id!, "Get Compute.job"])
+                    job <- Compute.job(w)
+                    co log([w.worker_id!, "Job planned"])
+
+                    -- Cannot use the value :( but do run the job
+                    pr <- job.run(Promise.done())
+                    co log([w.worker_id!, "Got a Promise"])
+                
+                    -- TODO: temporary shit
+                    z <- pr.yield()
+                    co log([w.worker_id!, "Promise yielded"])
+                    co log(z)
+
+                    -- Workers is a stream of workers that have the job triggered/scheduled
+                    workers <<- w
+                else:
+                  co log(["Worker was already visited", w.worker_id!])
+
+        parseq p <- peers on p:
+            -- Independently, need to wait for the required number of workers to succeed before proceeding
+            y <- yield(workers)
+            y.yield()
+            co log(["Yielded on workers", p])
+            -- fastest ingoing, this outgoing
+            outgoing <<- [ingoing!, p]
+        
+        new_yield = func () -> ?Error:
+            -- This is the fastest path, but we have no place to keep it
+            co log(["New yield"])
+            join outgoing!
+            co log(["Joined"])
+            <- nil
+
+        <- Promise(yield = new_yield)  
+
+    <- Job(run = run)  
+  <- Function(run = deal_run)  

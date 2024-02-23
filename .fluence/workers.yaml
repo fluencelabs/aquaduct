@@ -10,8 +10,8 @@ deals:
   local:
     myDeployment:
       definition: bafkreigs3lmlz7u7fpc74yj6yxtv4nqaksq2kct256yymdl5udclrsyro4
-      timestamp: 2024-02-22T16:59:40.432Z
-      dealIdOriginal: "0xa12fFA0B9f159BB4C54bce579611927Addc51610"
-      dealId: a12ffa0b9f159bb4c54bce579611927addc51610
+      timestamp: 2024-02-23T14:07:36.210Z
+      dealIdOriginal: "0x5E3d0fdE6f793B3115A9E7f5EBC195bbeeD35d6C"
+      dealId: 5e3d0fde6f793b3115a9e7f5ebc195bbeed35d6c
       chainNetwork: local
       chainNetworkId: 31337

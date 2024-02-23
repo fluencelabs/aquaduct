@@ -1,0 +1,17 @@
+aqua Cloudless_Yield declares *
+
+import Worker from "@fluencelabs/aqua-lib/subnet.aqua"
+import Promise, Error from "../promise"
+
+--
+-- Strategies for Cloudless Functions
+--
+
+-- Wait for K replies, no matter the quality of replies, success/err
+func wait_for_k(k: u8) -> (*Worker -> Promise):
+  wait = func (ws: *Worker) -> Promise:
+    yield = func () -> ?Error:
+      join ws[k-1]
+      <- nil
+    <- Promise(yield = yield)
+  <- wait    

@@ -1,0 +1,25 @@
+aqua Cloudless_Core declares *
+
+import Error from "../promise"
+import Job, j_timeout from "../job"
+-- use timeout from "job" as Job
+
+alias DealId : string
+
+-- Cloudless Function runs Compute on a single Subnet – with the given execution policy
+ability Function:
+  run(dealId: DealId) -> Job
+
+--
+-- DECORATORS
+--
+
+-- Function times out and errors after ms
+-- Checked on yield phase
+-- TODO should be just timeout, but imports work poorly
+func ct_timeout{Function}(waitForMs: u64, errorMessage: Error) -> Function:
+  run = func(dealId: DealId) -> Job:
+    j <- Function.run(dealId)
+    <- j_timeout{j}(waitForMs, errorMessage)
+
+  <- Function(run = run)

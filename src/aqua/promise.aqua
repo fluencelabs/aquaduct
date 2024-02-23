@@ -36,7 +36,7 @@ func timeout{Promise}(waitForMs: u64, errorMessage: Error) -> Promise:
     timeoutError: *Error
     maybeError: *Error
 
-    run = ():
+    run = func ():
       pushAll(maybeError, Promise.yield())
       timeoutError <<- ""
 

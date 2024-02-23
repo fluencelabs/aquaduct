@@ -17,8 +17,8 @@ ability Compute:
 -- yield is going to be executed only after start was executed
 func lift(start: Worker -> (), yield: Worker -> ?Error) -> Compute:
   
-  job = (worker: Worker) -> Job:
-    run = (promise: Promise) -> Promise:
+  job = func (worker: Worker) -> Job:
+    run = func (promise: Promise) -> Promise:
       err: *Error
  
       on worker.worker_id! via worker.host_id:
@@ -45,10 +45,10 @@ func lift(start: Worker -> (), yield: Worker -> ?Error) -> Compute:
 -- Timeout is checked ON YIELD – as otherwise observation might never happen which makes a little sense
 -- TODO should be just timeout
 func cm_timeout{Compute}(waitForMs: u64, errorMessage: Error) -> Compute:
-  job = (worker: Worker) -> Job:
+  job = func (worker: Worker) -> Job:
     workerJob = Compute.job(worker)
 
-    run = (promise: Promise) -> Promise:
+    run = func (promise: Promise) -> Promise:
       workerPromise <- workerJob.run{promise}()
       <- Promise.timeout{workerPromise}(waitForMs, errorMessage)
 

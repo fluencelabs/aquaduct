@@ -7,134 +7,94 @@ use "deals.aqua"
 use "hosts.aqua"
 import "services.aqua"
 
-use "cloudless"
+use "cloudless/make"
+use "cloudless/exec"
+use "cloudless/yield"
+
 use "compute"
 import Error from "promise"
 
--- IMPORTANT: Add exports for all functions that you want to run
-export helloWorld, helloWorldRemote, getInfo, getInfos, haveFun
 
 -- DOCUMENTATION:
 -- https://fluence.dev
 
 
+export yourCloudlessFunction
 
--- example of running services deployed using `fluence deal deploy`
--- with worker 'myDeployment' which has service 'MyService' with method 'greeting'
-
-export runDeployedServices, showSubnet, haveFun
-
-func haveFun() -> string:
+-- Mind the return type: it could be different
+func yourCloudlessFunction() -> []string:
+  --
+  -- Read deal info from configuration – need to deploy first
+  --
   deals <- Deals.get()
   dealId = deals.myDeployment!.dealIdOriginal
 
-  log = (msg: []string):
-    co Console.print(msg)  
+  --
+  -- Prepare logging for debugability
+  --
 
+  -- Use these snippets for logging, pass log function as an argument.
+  -- If you have more contextual data, pass it as ability properties.
+  -- Refer to Aqua Book for more
+  log_enabled = false
+  -- Closure without `func` will run on the same peer where it's declared (init peer in our case)
+  capturedLog = (msg: []⊤):
+    if log_enabled:
+      Console.print(msg) 
+  -- Closure with `func` is detached, it will be initiated on the call site.
+  -- And will move execution to init peer in parallel, without blocking execution, thanks to `co`
+  log = func (msg: []⊤):
+    co capturedLog(msg)   
+
+  --
+  -- Express your compute function
+  -- 
+
+  -- Append-only accumulator of results that all our subnet workers will write to.
+  -- Not necessarily a string.
   res: *string
+
+  -- Inside this closure, express what should happen on your worker (that's given as an argument).
+  -- All your services are available here. And builtin ones.
+  -- If you need time or such things, do a short hop to w.host_id.
   start = func (w: Worker):
     log(["About to start working"])
-    res <- Op.concat_strings("Hello from worker ", w.worker_id!)
+    res <- MyService.greeting("Hello from worker")
 
+  -- This closure is to find out whether given worker completed the job
+  -- Like, find worker_id in res stream, join on the result (to trigger waiting)...
+  -- Or return errors
   yield = func (w: Worker) -> ?Error:
     log(["About to join res!"])
     join res!
     -- TODO: find this worker in res...
     <- nil
 
-
+  -- Finally, build your compute function from start and yield closures
   comp = Compute.lift(start, yield)
 
-  fn = Cloudless.disjoint_run{comp}([HOST_PEER_ID], Cloudless.wait_for_k(1), log)
+  --
+  -- Make Cloudless Function
+  --
+  
+  -- First, we make a cloudless function that will have our compute function executed on the workers.
+  -- Simple and disjoint both call function on all workers in parallel.
+  -- Disjoint can be used to protect from censoring your subnet by getting to subnet workers through disjoint paths.
+  -- Simple resolves the subnet on a single given peer, or, if omitted, on the relay.
+  -- Cloudless_Yield.wait_for_k will wait for this number of responses before considering success.
+  fn = Cloudless_Make.simple{comp}(nil, Cloudless_Yield.wait_for_k(1), log)
+  -- fn = Cloudless_Make.disjoint{comp}([HOST_PEER_ID], Cloudless_Yield.wait_for_k(2), log)
 
-  Cloudless.roundtrip{fn}(dealId, ?[HOST_PEER_ID])
+  --
+  -- Execute Cloud Function
+  --
 
-  <- res!
+  -- Here we do a roundtrip, which means that we will get the result back to us.
+  -- Another option is fireAndForget. In this case, you should not expect any result returned to you.
+  -- First argument is your deal id to resolve the deployed subnet.
+  -- Second argument is where the function will yield. It's more efficient to do it on HOST_PEER_ID, but can do it on INIT_PEER_ID if you like.
+  Cloudless_Exec.roundtrip{fn}(dealId, ?[HOST_PEER_ID])
 
-data Answer:
-    answer: ?string
-    worker: Worker
-
-func runDeployedServices() -> []Answer:
-    deals <- Deals.get()
-    dealId = deals.myDeployment!.dealIdOriginal
-    answers: *Answer
-    on HOST_PEER_ID:
-        subnet <- Subnet.resolve(dealId)
-    if subnet.success == false:
-        Console.print(["Failed to resolve subnet: ", subnet.error])
-
-    for w <- subnet.workers:
-        if w.worker_id == nil:
-            answers <<- Answer(answer=nil, worker=w)
-        else:
-            on w.worker_id! via w.host_id:
-                answer <- MyService.greeting("fluence")
-                answers <<- Answer(answer=?[answer], worker=w)
-
-    <- answers
-
-data WorkerServices:
-    host_id: string
-    worker_id: ?string
-    services: ?[]string
-    spells: ?[]string
-
-func showSubnet() -> []WorkerServices:
-    deals <- Deals.get()
-    dealId = deals.myDeployment!.dealIdOriginal
-    on HOST_PEER_ID:
-        subnet <- Subnet.resolve(dealId)
-    if subnet.success == false:
-        Console.print(["Failed to resolve subnet: ", subnet.error])
-
-    services: *WorkerServices
-    for w <- subnet.workers:
-        if w.worker_id != nil:
-            on w.worker_id! via w.host_id:
-                -- get list of all services on this worker
-                srvs <- Srv.list()
-
-                -- gather spells and services aliases
-                spells_aliases: *string
-                services_aliases: *string
-                for s <- srvs:
-                    if s.aliases.length != 0:
-                        if s.service_type == "spell":
-                            spells_aliases <<- s.aliases[0]
-                        if s.service_type == "service":
-                            services_aliases <<- s.aliases[0]
-
-                services <<- WorkerServices(host_id=w.host_id, worker_id=w.worker_id, services=?[services_aliases], spells=?[spells_aliases])
-        else:
-            services <<- WorkerServices(host_id=w.host_id, worker_id=nil, services=nil, spells=nil)
-
-    <- services
-
-
--- local
-func helloWorld(name: string) -> string:
-    <- Op.concat_strings("Hello, ", name)
-
--- remote
-func helloWorldRemote(name: string) -> string:
-    Console.print(["Before getting to host peer id"])
-    on HOST_PEER_ID:
-        hello_msg <- helloWorld(name)
-        from_msg <- Op.concat_strings(hello_msg, "! From ")
-        from_peer_msg <- Op.concat_strings(from_msg, HOST_PEER_ID)
-    <- from_peer_msg
-
--- request response
-func getInfo() -> Info, PeerId:
-    on HOST_PEER_ID:
-        info <- Peer.identify()
-    <- info, HOST_PEER_ID
-
--- iterate through several peers
-func getInfos(peers: []PeerId) -> []Info:
-    infos: *Info
-    for p <- peers:
-        on p:
-            infos <- Peer.identify()
-    <- infos
+  -- Results are collected into your res variable. Now it should be ready to use, filled with values.
+  -- Please note that errors handling is ignored in this example, which may hurt in the real life.
+  <- res

@@ -1,0 +1,29 @@
+aqua Cloudless_Exec declares *
+
+import pushAll from "../utils"
+import Function, DealId from "core" 
+import Error, Promise from "../promise"
+use done from "../promise" as Promise
+
+-- Request, response roundtrip
+func roundtrip{Function}(dealId: DealId, yieldOnPeer: ?string) -> ?Error:
+  yieldOn: *string
+  pushAll(yieldOn, yieldOnPeer)
+  yieldOn <<- HOST_PEER_ID
+
+  on yieldOn!:
+    -- Next two lines should do nothing on yieldOn peer
+    job <- Function.run(dealId)
+    promise <- job.run(Promise.done())
+
+    -- This should actually happen with move to yieldOn
+    err <- promise.yield()
+
+  <- err
+
+-- Fire a request, no topology hops back to init peer should happen
+func fireAndForget{Function}(dealId: DealId):
+  run = func ():
+    job <- Function.run(dealId)
+    job.run(Promise.done())
+  co run()  
