@@ -14,6 +14,7 @@ func roundtrip{Function}(dealId: DealId, yieldOnPeer: ?string) -> ?Error:
   on yieldOn!:
     -- Next two lines should do nothing on yieldOn peer
     job <- Function.run(dealId)
+
     promise <- job.run(Promise.done())
 
     -- This should actually happen with move to yieldOn
