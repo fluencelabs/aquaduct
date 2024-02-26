@@ -1,6 +1,6 @@
 ## Contribute Code
 
-You are welcome to contribute to Fluence!
+You are welcome to contribute to Fluence! 
 
 Things you need to know:
 
