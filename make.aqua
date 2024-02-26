@@ -3,14 +3,14 @@ aqua Cloudless_Make declares *
 import PeerId from "@fluencelabs/aqua-lib/builtin.aqua"
 import Subnet, Worker from "@fluencelabs/aqua-lib/subnet.aqua"
 import Worker as WLibW from "@fluencelabs/aqua-lib/workers.aqua"
-import pushAll, optOr, contains from "../utils"
+import pushAll, optOr, contains from "utils"
 import Function, DealId from "core"
 
-import Error, Promise from "../promise"
-import Job, j_timeout from "../job"
+import Error, Promise from "promise"
+import Job, j_timeout from "job"
 -- use timeout from "job" as Job
-use done from "../promise" as Promise
-import Compute from "../compute"
+use done from "promise" as Promise
+import Compute from "compute"
 
 
 func simple{Compute}(coordinator: ?PeerId, yield: *Worker -> Promise, log: []⊤ -> ()) -> Function:

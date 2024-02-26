@@ -1,7 +1,7 @@
 aqua Cloudless_Yield declares *
 
 import Worker from "@fluencelabs/aqua-lib/subnet.aqua"
-import Promise, Error from "../promise"
+import Promise, Error from "promise"
 
 --
 -- Strategies for Cloudless Functions

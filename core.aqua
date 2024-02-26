@@ -1,7 +1,7 @@
 aqua Cloudless_Core declares *
 
-import Error from "../promise"
-import Job, j_timeout from "../job"
+import Error from "promise"
+import Job, j_timeout from "job"
 -- use timeout from "job" as Job
 
 alias DealId : string

@@ -2,4 +2,4 @@ aqua Cloudless declares *
 
 -- cannot use dots in declares!
 -- cannot reexport / redeclare, so much pain.
-import Function, ct_timeout as timeout from "cloudless/core"
+import Function, ct_timeout as timeout from "core"

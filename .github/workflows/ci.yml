@@ -34,4 +34,4 @@ jobs:
       - run: npm i
 
       - name: Check compilation
-        run: npm run compile-dry
+        run: npm run test

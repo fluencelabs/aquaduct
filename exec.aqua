@@ -1,9 +1,9 @@
 aqua Cloudless_Exec declares *
 
-import pushAll from "../utils"
+import pushAll from "utils"
 import Function, DealId from "core" 
-import Error, Promise from "../promise"
-use done from "../promise" as Promise
+import Error, Promise from "promise"
+use done from "promise" as Promise
 
 -- Request, response roundtrip
 func roundtrip{Function}(dealId: DealId, yieldOnPeer: ?string) -> ?Error:

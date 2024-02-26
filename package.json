@@ -3,11 +3,11 @@
   "version": "0.0.1",
   "description": "Aqua standard library",
   "files": [
-    "./cloudless/*.aqua",
-    "*.aqua"
+    "./*.aqua"
   ],
   "scripts": {
-    "compile-dry": "aqua -i . --dry"
+    "compile-dry": "fluence aqua -i compile --dry",
+    "test": "mkdir -p compile && find . -name '*.aqua' -print0 -maxdepth 1 | xargs -0 -I {} cp {} ./compile/ && npm run compile-dry"
   },
   "repository": {
     "type": "git",
@@ -24,6 +24,6 @@
   },
   "homepage": "https://github.com/fluencelabs/aqueduct#readme",
   "devDependencies": {
-    "@fluencelabs/aqua": "0.9.4"
+    "@fluencelabs/aqua-lib": "0.10.2"
   }
 }
