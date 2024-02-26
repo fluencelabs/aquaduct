@@ -1,0 +1,11 @@
+{
+  "bootstrap-sha": "c1d0209c81976c2b232b13f5526e81dba0875f05",
+  "release-type": "node",
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": true,
+  "packages": {
+    ".": {
+      "component": "aqueduct"
+    }
+  }
+}

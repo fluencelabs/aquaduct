@@ -1,0 +1,29 @@
+{
+  "name": "@fluencelabs/aqueduct",
+  "version": "0.0.1",
+  "description": "Aqua standard library",
+  "files": [
+    "./cloudless/*.aqua",
+    "*.aqua"
+  ],
+  "scripts": {
+    "compile-dry": "aqua -i . --dry"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fluencelabs/aqueduct.git"
+  },
+  "keywords": [
+    "aqua",
+    "fluence"
+  ],
+  "author": "Fluence Labs",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fluencelabs/aqueduct/issues"
+  },
+  "homepage": "https://github.com/fluencelabs/aqueduct#readme",
+  "devDependencies": {
+    "@fluencelabs/aqua": "0.9.4"
+  }
+}

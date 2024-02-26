@@ -1,5 +1,0 @@
-aqua Services declares *
-
-
-service MyService("myService"):
-  greeting(name: string) -> string

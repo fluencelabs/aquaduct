@@ -1,8 +1,0 @@
-{
-  "rewrites": [{ "source": "/:path*", "destination": "/api/serverless" }],
-  "functions": {
-    "api/serverless.js": {
-      "includeFiles": "{src,node_modules}/**/*"
-    }
-  }
-}
