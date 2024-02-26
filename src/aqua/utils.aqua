@@ -22,3 +22,10 @@ func contains(haystack: []string, needle: string) -> bool:
 func pushAll(stream: *string, add: []string):
   for a <- add:
     stream <<- a  
+
+-- moves, as returns array
+func prepend(prefix: string, stream: []string) -> []string:
+  new_stream = *[prefix]
+  for a <- stream:
+    new_stream <<- a    
+  <- new_stream  

@@ -6,7 +6,7 @@ import Error, Promise from "../promise"
 use done from "../promise" as Promise
 
 -- Request, response roundtrip
-func roundtrip{Function}(dealId: DealId, yieldOnPeer: ?string) -> ?Error:
+func roundtrip{Function}(dealId: DealId, yieldOnPeer: ?string) -> []Error:
   yieldOn: *string
   pushAll(yieldOn, yieldOnPeer)
   yieldOn <<- HOST_PEER_ID

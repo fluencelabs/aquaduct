@@ -18,3 +18,11 @@ enable = [ "aqua-ipfs", "decider" ]
   start_block = "earliest"
   matcher_address = "0x68B1D87F95878fE05B998F19b66F4baba5De1aed"
   wallet_key = "0x2bd891b6c70e7f12db46fc63b2fd547a06f455f3b090b099895cafc93ae6a069"
+
+[chain_config]
+http_endpoint = "http://chain-rpc:8545"
+core_contract_address = "0x0B306BF915C4d645ff596e518fAf3F9669b97016"
+cc_contract_address = "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c"
+market_contract_address = "0x68B1D87F95878fE05B998F19b66F4baba5De1aed"
+network_id = 31_337
+wallet_key = "0x2bd891b6c70e7f12db46fc63b2fd547a06f455f3b090b099895cafc93ae6a069"

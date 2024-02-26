@@ -7,9 +7,9 @@ import pushAll from "utils"
 alias Error: string
 
 ability Promise:
-  yield: -> ?Error
+  yield: -> []Error
 
-func done_nil() -> ?Error:
+func done_nil() -> []Error:
   <- nil
 
 func done() -> Promise:

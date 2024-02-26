@@ -1,0 +1,22 @@
+aqua Logger declares *
+
+import Console from "@fluencelabs/aqua-lib/builtin.aqua"
+
+ability Logger:
+  log(msgs: []⊤)
+
+func local(enabled: bool) -> Logger:
+  -- Use these snippets for logging, pass log function as an argument.
+  -- If you have more contextual data, pass it as ability properties.
+  -- Refer to Aqua Book for more
+
+  -- Closure without `func` will run on the same peer where it's declared (init peer in our case)
+  capturedLog = (msg: []⊤):
+    if enabled:
+      Console.print(msg) 
+  -- Closure with `func` is detached, it will be initiated on the call site.
+  -- And will move execution to init peer in parallel, without blocking execution, thanks to `co`
+  log = func (msg: []⊤):
+    co capturedLog(msg)   
+
+  <- Logger(log)  
