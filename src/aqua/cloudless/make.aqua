@@ -62,8 +62,12 @@ func simple{Compute, Logger}(coordinator: ?PeerId, yield: Yield) -> Function:
               par on w.worker_id! via w.host_id:
                 job <- Compute.job(w)
                 log(["got compute job on", w.worker_id!])
-                job.run(promise)
-                workers <<- w
+                try:
+                  job.run(promise)
+                  workers <<- w
+                catch e:
+                  log(["Compute job errored on", w.worker_id!, "message:", e.message])
+                  errors <<- e.message  
 
       new_yield = func () -> ?Error:
         y <- yield(workers, errors)
