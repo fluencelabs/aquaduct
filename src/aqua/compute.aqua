@@ -16,11 +16,11 @@ ability Compute:
 -- yield: join and get optional error on some other peer
 -- yield is going to be executed only after start was executed
 func lift(start: Worker -> (), yield: Worker -> ?Error) -> Compute:
-  
+
   job = func (worker: Worker) -> Job:
     run = func (promise: Promise) -> Promise:
       err: *Error
- 
+
       on worker.worker_id! via worker.host_id:
         -- incur topology hops from the previous whatever place
         prevErr <- promise.yield()
@@ -40,7 +40,7 @@ func lift(start: Worker -> (), yield: Worker -> ?Error) -> Compute:
       <- Promise(yield = nextYield)
     <- Job(run = run)
 
-  <- Compute(job, yield)  
+  <- Compute(job, yield)
 
 -- Timeout is checked ON YIELD – as otherwise observation might never happen which makes a little sense
 -- TODO should be just timeout
@@ -52,7 +52,7 @@ func cm_timeout{Compute}(waitForMs: u64, errorMessage: Error) -> Compute:
       workerPromise <- workerJob.run{promise}()
       <- p_timeout{workerPromise}(waitForMs, errorMessage)
 
-    <- Job(run = run)  
+    <- Job(run = run)
 
   yield = func (worker: Worker) -> []Error:
     newYield = func () -> []Error:
@@ -61,4 +61,4 @@ func cm_timeout{Compute}(waitForMs: u64, errorMessage: Error) -> Compute:
     newP = p_timeout{p}(waitForMs, errorMessage)
     <- newP.yield()
 
-  <- Compute(job, yield)    
+  <- Compute(job, yield)

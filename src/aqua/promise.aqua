@@ -29,7 +29,7 @@ func and_then(a: Promise, b: Promise) -> Promise:
 
     <- maybeError
 
-  <- Promise(yield = yield)  
+  <- Promise(yield = yield)
 
 func timeout{Promise}(waitForMs: u64, errorMessage: Error) -> Promise:
   yield = func() -> ?Error:
@@ -46,5 +46,5 @@ func timeout{Promise}(waitForMs: u64, errorMessage: Error) -> Promise:
     if timeoutError! == errorMessage:
       maybeError <<- errorMessage
 
-    <- maybeError  
-  <- Promise(yield = yield)  
+    <- maybeError
+  <- Promise(yield = yield)

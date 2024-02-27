@@ -25,7 +25,7 @@ func resolveSubnet{Logger}(deal_id: DealId, errors: *Error) -> []Worker:
     -- cannot use pushAll as it's typed with string
     for w <- subnet.workers:
       workers <<- w
-  <- workers      
+  <- workers
 
 func simple{Compute, Logger}(coordinator: ?PeerId, yield: Yield) -> Function:
   log = Logger.log
@@ -49,14 +49,14 @@ func simple{Compute, Logger}(coordinator: ?PeerId, yield: Yield) -> Function:
             catch e:
               errors <<- e.message
               is_active_opt <<- false
-                
+
             is_active = is_active_opt!
             log(["Hello guys!", is_active])
             if is_active == false:
               log(["Deal is inactive on this host, have you deposited enough funds?", w.host_id])
               errors <<- "Deal is not active, worker is not created or not available"
             else:
-              log(["Deal is active, okay"])  
+              log(["Deal is active, okay"])
 
               log(["Going go ", w.worker_id!, "via", w.host_id])
               par on w.worker_id! via w.host_id:
@@ -67,18 +67,18 @@ func simple{Compute, Logger}(coordinator: ?PeerId, yield: Yield) -> Function:
                   workers <<- w
                 catch e:
                   log(["Compute job errored on", w.worker_id!, "message:", e.message])
-                  errors <<- e.message  
+                  errors <<- e.message
 
       new_yield = func () -> ?Error:
         y <- yield(workers, errors)
         new_errs <- y.yield()
         <- new_errs
-      <- Promise(yield = new_yield)  
+      <- Promise(yield = new_yield)
 
-    <- Job(run = run)  
-  <- Function(run = deal_run)  
+    <- Job(run = run)
+  <- Function(run = deal_run)
 
--- Compute: will be triggered on every worker that could be reached. 
+-- Compute: will be triggered on every worker that could be reached.
 --        If subnet-scale coordination is needed, Compute must conduct it
 -- peers: list of peer ids to build disjoint paths
 -- deal_id: subnet to run Compute on
@@ -132,7 +132,7 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
               -- Cannot use the value :( but do run the job
               pr <- job.run(Promise.done())
               log([w.worker_id!, "Got a Promise"])
-          
+
               -- TODO: temporary shit
               z <- pr.yield()
               log([w.worker_id!, "Promise yielded"])
@@ -150,7 +150,7 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
         log(["Yielded on workers", p])
         -- fastest ingoing, this outgoing
         outgoing <<- [ingoing!, p]
-      
+
       new_yield = func () -> ?Error:
         -- This is the fastest path, but we have no place to keep it
         log(["New yield"])
@@ -158,7 +158,7 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
         log(["Joined"])
         <- nil
 
-      <- Promise(yield = new_yield)  
+      <- Promise(yield = new_yield)
 
-    <- Job(run = run)  
-  <- Function(run = deal_run)  
+    <- Job(run = run)
+  <- Function(run = deal_run)

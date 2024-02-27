@@ -13,10 +13,10 @@ func local(enabled: bool) -> Logger:
   -- Closure without `func` will run on the same peer where it's declared (init peer in our case)
   capturedLog = (msg: []⊤):
     if enabled:
-      Console.print(msg) 
+      Console.print(msg)
   -- Closure with `func` is detached, it will be initiated on the call site.
   -- And will move execution to init peer in parallel, without blocking execution, thanks to `co`
   log = func (msg: []⊤):
-    co capturedLog(msg)   
+    co capturedLog(msg)
 
-  <- Logger(log)  
+  <- Logger(log)

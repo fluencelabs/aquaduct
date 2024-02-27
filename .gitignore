@@ -1,10 +1,16 @@
 .idea
 .DS_Store
 /.fluence/secrets
+/.fluence/configs
 /.fluence/env.yaml
 /.fluence/schemas
 /.fluence/tmp
 /.fluence/aqua-dependencies/package.json
+/.fluence/aqua/deals.aqua
+/.fluence/workers.yaml
+/.fluence/docker-compose.yaml
+/.fluence/provider-artifacts.yaml
+/.fluence/provider-secrets.yaml
 src/frontend/src/compiled-aqua/
 **/node_modules
 **/target/

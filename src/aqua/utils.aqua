@@ -7,7 +7,7 @@ func optOr(opt: ?string, or: string) -> string:
     res <<-or
   else:
     res <<- opt!
-  <- res!    
+  <- res!
 
 -- moves due to implicit canonicalization on the last line
 func contains(haystack: []string, needle: string) -> bool:
@@ -16,16 +16,16 @@ func contains(haystack: []string, needle: string) -> bool:
     if t == needle:
       c <<- true
   c <<- false
-  <- c!  
+  <- c!
 
 -- add is a scalar, so no canonicalization happens, no move
 func pushAll(stream: *string, add: []string):
   for a <- add:
-    stream <<- a  
+    stream <<- a
 
 -- moves, as returns array
 func prepend(prefix: string, stream: []string) -> []string:
   new_stream = *[prefix]
   for a <- stream:
-    new_stream <<- a    
-  <- new_stream  
+    new_stream <<- a
+  <- new_stream

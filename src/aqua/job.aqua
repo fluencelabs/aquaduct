@@ -4,10 +4,10 @@ import Promise, Error from "promise"
 import timeout as pTimeout from "promise"
 
 ability Job:
-  run{Promise}() -> Promise 
+  run{Promise}() -> Promise
 
 func j_timeout{Job}(waitForMs: u64, errorMessage: Error) -> Job:
   job = func (promise: Promise) -> Promise:
     jobPromise <- Job.run{promise}()
     <- pTimeout{jobPromise}(waitForMs, errorMessage)
-  <- Job(run = job)  
+  <- Job(run = job)

@@ -29,7 +29,7 @@ func yourCloudlessFunction() -> []string:
   -- Read deal info from configuration – need to deploy first
   --
   deals <- Deals.get()
-  dealId = deals.myDeployment!.dealIdOriginal
+  dealId = deals.myDeployment!.dealId
 
   --
   -- Prepare logging for debugability
@@ -39,7 +39,7 @@ func yourCloudlessFunction() -> []string:
 
   --
   -- Express your compute function
-  -- 
+  --
 
   -- Append-only accumulator of results that all our subnet workers will write to.
   -- Not necessarily a string.
@@ -67,7 +67,7 @@ func yourCloudlessFunction() -> []string:
   --
   -- Make Cloudless Function
   --
-  
+
   -- First, we make a cloudless function that will have our compute function executed on the workers.
   -- Simple and disjoint both call function on all workers in parallel.
   -- Disjoint can be used to protect from censoring your subnet by getting to subnet workers through disjoint paths.

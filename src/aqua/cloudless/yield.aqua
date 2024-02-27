@@ -22,4 +22,4 @@ func wait_for(success: u8, error: u8) -> Yield:
 
       <- new_error
     <- Promise(yield = yield)
-  <- wait    
+  <- wait
