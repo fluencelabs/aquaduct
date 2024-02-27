@@ -4,7 +4,8 @@ import Worker from "@fluencelabs/aqua-lib/subnet.aqua"
 import Promise, Error from "../promise"
 import pushAll from "../utils"
 
-alias Yield: *Worker, *Error -> Promise
+alias WorkerYield: Worker -> ?Error
+alias Yield: *Worker, *Error, WorkerYield -> Promise
 
 --
 -- Strategies for Cloudless Functions
@@ -12,9 +13,22 @@ alias Yield: *Worker, *Error -> Promise
 
 -- Wait for K replies, no matter the quality of replies, success/err
 func wait_for(success: u8, error: u8) -> Yield:
-  wait = func (ws: *Worker, err: *Error) -> Promise:
+  wait = func (ws: *Worker, err: *Error, cb: Worker -> ?Error) -> Promise:
     yield = func () -> ?Error:
-      join ws[success-1]
+      ok: *bool
+
+      -- I hope that it will not canonicalize ws, need to check
+      for w <- ws rec:
+        e <- cb(w)
+        if e == nil:
+          ok <<- true
+        else:  
+          pushAll(err, cb(w))
+
+      -- TODO not absolutely correct:
+      -- ignores errors that happen BEFORE we can reach workers
+      -- but they might be fatal
+      join ok[success-1]
       par join err[error-1]
       new_error: *Error
       if err.length >= error:

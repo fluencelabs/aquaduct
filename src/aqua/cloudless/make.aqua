@@ -70,7 +70,7 @@ func simple{Compute, Logger}(coordinator: ?PeerId, yield: Yield) -> Function:
                   errors <<- e.message
 
       new_yield = func () -> ?Error:
-        y <- yield(workers, errors)
+        y <- yield(workers, errors, Compute.yield)
         new_errs <- y.yield()
         <- new_errs
       <- Promise(yield = new_yield)
@@ -145,7 +145,7 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
 
       parseq p <- peers on p:
         -- Independently, need to wait for the required number of workers to succeed before proceeding
-        y <- yield(workers, errors)
+        y <- yield(workers, errors, Compute.yield)
         pushAll(errors, y.yield())
         log(["Yielded on workers", p])
         -- fastest ingoing, this outgoing

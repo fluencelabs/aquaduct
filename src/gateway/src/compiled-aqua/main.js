@@ -50,9 +50,9 @@ export const yourCloudlessFunction_script = `
                     )
                     (ap ("dealIdOriginal" "0x5E3d0fdE6f793B3115A9E7f5EBC195bbeeD35d6C") %Deal_obj_map)
                    )
-                   (ap ("definition" "bafkreigs3lmlz7u7fpc74yj6yxtv4nqaksq2kct256yymdl5udclrsyro4") %Deal_obj_map)
+                   (ap ("definition" "bafkreifdxe5sf54ss5euzj3gcmfewt3sx4f6en7hqg24tdry4fx6jhyt3m") %Deal_obj_map)
                   )
-                  (ap ("timestamp" "2024-02-26T15:35:42.145Z") %Deal_obj_map)
+                  (ap ("timestamp" "2024-02-27T13:58:06.258Z") %Deal_obj_map)
                  )
                  (canon %init_peer_id% %Deal_obj_map  Deal_obj)
                 )
@@ -74,7 +74,7 @@ export const yourCloudlessFunction_script = `
            )
            (ap Deals_obj.$.myDeployment Deals_obj_flat)
           )
-          (ap Deals_obj_flat.$.[0].dealIdOriginal Deals_obj_flat_flat)
+          (ap Deals_obj_flat.$.[0].dealId Deals_obj_flat_flat)
          )
          (new $option-inline-1
           (seq
@@ -206,58 +206,181 @@ export const yourCloudlessFunction_script = `
                  )
                 )
                 (xor
-                 (seq
+                 (par
                   (seq
-                   (seq
-                    (call res-0_gate.$.[0] ("subnet" "resolve") [Deals_obj_flat_flat] ret)
-                    (new $array-inline
+                   (new $workers-0
+                    (seq
                      (seq
                       (seq
-                       (ap "Subnet resolved to:" $array-inline)
-                       (ap ret $array-inline)
-                      )
-                      (canon res-0_gate.$.[0] $array-inline  #array-inline-0)
-                     )
-                    )
-                   )
-                   (par
-                    (seq
-                     (new $-ephemeral-stream-
-                      (new #-ephemeral-canon-
-                       (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
-                      )
-                     )
-                     (new -if-error-
-                      (xor
-                       (match true true
-                        (call %init_peer_id% ("run-console" "print") [#array-inline-0])
-                       )
                        (seq
-                        (ap :error: -if-error-)
-                        (xor
-                         (match :error:.$.error_code 10001
-                          (null)
+                        (seq
+                         (call res-0_gate.$.[0] ("subnet" "resolve") [Deals_obj_flat_flat] ret)
+                         (new $array-inline
+                          (seq
+                           (seq
+                            (ap "Subnet resolved to:" $array-inline)
+                            (ap ret $array-inline)
+                           )
+                           (canon res-0_gate.$.[0] $array-inline  #array-inline-0)
+                          )
                          )
-                         (fail -if-error-)
+                        )
+                        (par
+                         (seq
+                          (new $-ephemeral-stream-
+                           (new #-ephemeral-canon-
+                            (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
+                           )
+                          )
+                          (new -if-error-
+                           (xor
+                            (match true true
+                             (call %init_peer_id% ("run-console" "print") [#array-inline-0])
+                            )
+                            (seq
+                             (ap :error: -if-error-)
+                             (xor
+                              (match :error:.$.error_code 10001
+                               (null)
+                              )
+                              (fail -if-error-)
+                             )
+                            )
+                           )
+                          )
+                         )
+                         (null)
+                        )
+                       )
+                       (new -if-else-error-
+                        (new -else-error-
+                         (new -if-error-
+                          (xor
+                           (match ret.$.success false
+                            (seq
+                             (seq
+                              (new $array-inline-1
+                               (seq
+                                (ap "Subnet resolve failed" $array-inline-1)
+                                (canon res-0_gate.$.[0] $array-inline-1  #array-inline-1-0)
+                               )
+                              )
+                              (par
+                               (seq
+                                (new $-ephemeral-stream-
+                                 (new #-ephemeral-canon-
+                                  (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
+                                 )
+                                )
+                                (new -if-error-
+                                 (xor
+                                  (match true true
+                                   (call %init_peer_id% ("run-console" "print") [#array-inline-1-0])
+                                  )
+                                  (seq
+                                   (ap :error: -if-error-)
+                                   (xor
+                                    (match :error:.$.error_code 10001
+                                     (null)
+                                    )
+                                    (fail -if-error-)
+                                   )
+                                  )
+                                 )
+                                )
+                               )
+                               (null)
+                              )
+                             )
+                             (ap "Subnet resolve failed" $errors)
+                            )
+                           )
+                           (seq
+                            (ap :error: -if-error-)
+                            (xor
+                             (match :error:.$.error_code 10001
+                              (fold ret.$.workers w-0-0
+                               (seq
+                                (ap w-0-0 $workers-0)
+                                (next w-0-0)
+                               )
+                               (null)
+                              )
+                             )
+                             (seq
+                              (seq
+                               (ap :error: -else-error-)
+                               (xor
+                                (match :error:.$.error_code 10001
+                                 (ap -if-error- -if-else-error-)
+                                )
+                                (ap -else-error- -if-else-error-)
+                               )
+                              )
+                              (fail -if-else-error-)
+                             )
+                            )
+                           )
+                          )
+                         )
                         )
                        )
                       )
+                      (canon res-0_gate.$.[0] $workers-0  #-workers-fix-0)
                      )
+                     (ap #-workers-fix-0 -workers-flat-0)
                     )
-                    (null)
                    )
-                  )
-                  (new -if-else-error-
-                   (new -else-error-
-                    (new -if-error-
-                     (xor
-                      (match ret.$.success false
+                   (fold -workers-flat-0 w-1
+                    (par
+                     (new $is_active_opt
+                      (xor
                        (seq
                         (seq
-                         (new $array-inline-1
+                         (seq
                           (seq
-                           (ap "Subnet resolve failed" $array-inline-1)
-                           (canon res-0_gate.$.[0] $array-inline-1  #array-inline-1-0)
+                           (xor
+                            (seq
+                             (call w-1.$.host_id ("worker" "is_active") [Deals_obj_flat_flat] ret-0)
+                             (ap ret-0 $is_active_opt)
+                            )
+                            (seq
+                             (ap :error:.$.message $errors)
+                             (ap false $is_active_opt)
+                            )
+                           )
+                           (new $is_active_opt_test
+                            (seq
+                             (seq
+                              (fold $is_active_opt is_active_opt_fold_var
+                               (seq
+                                (seq
+                                 (ap is_active_opt_fold_var $is_active_opt_test)
+                                 (canon w-1.$.host_id $is_active_opt_test  #is_active_opt_iter_canon)
+                                )
+                                (xor
+                                 (match #is_active_opt_iter_canon.length 1
+                                  (null)
+                                 )
+                                 (next is_active_opt_fold_var)
+                                )
+                               )
+                               (never)
+                              )
+                              (canon w-1.$.host_id $is_active_opt_test  #is_active_opt_result_canon)
+                             )
+                             (ap #is_active_opt_result_canon is_active_opt_gate)
+                            )
+                           )
+                          )
+                          (new $array-inline-2
+                           (seq
+                            (seq
+                             (ap "Hello guys!" $array-inline-2)
+                             (ap is_active_opt_gate.$.[0] $array-inline-2)
+                            )
+                            (canon w-1.$.host_id $array-inline-2  #array-inline-2-0)
+                           )
                           )
                          )
                          (par
@@ -270,7 +393,7 @@ export const yourCloudlessFunction_script = `
                            (new -if-error-
                             (xor
                              (match true true
-                              (call %init_peer_id% ("run-console" "print") [#array-inline-1-0])
+                              (call %init_peer_id% ("run-console" "print") [#array-inline-2-0])
                              )
                              (seq
                               (ap :error: -if-error-)
@@ -287,64 +410,21 @@ export const yourCloudlessFunction_script = `
                           (null)
                          )
                         )
-                        (ap "Subnet resolve failed" $errors)
-                       )
-                      )
-                      (seq
-                       (ap :error: -if-error-)
-                       (xor
-                        (match :error:.$.error_code 10001
-                         (par
-                          (fold ret.$.workers w-0
-                           (par
-                            (new $is_active_opt
-                             (xor
+                        (new -if-else-error-
+                         (new -else-error-
+                          (new -if-error-
+                           (xor
+                            (seq
+                             (match is_active_opt_gate.$.[0] false
                               (seq
                                (seq
-                                (seq
+                                (new $array-inline-3
                                  (seq
-                                  (xor
-                                   (seq
-                                    (call w-0.$.host_id ("worker" "is_active") [Deals_obj_flat_flat] ret-0)
-                                    (ap ret-0 $is_active_opt)
-                                   )
-                                   (seq
-                                    (ap :error:.$.message $errors)
-                                    (ap false $is_active_opt)
-                                   )
-                                  )
-                                  (new $is_active_opt_test
-                                   (seq
-                                    (seq
-                                     (fold $is_active_opt is_active_opt_fold_var
-                                      (seq
-                                       (seq
-                                        (ap is_active_opt_fold_var $is_active_opt_test)
-                                        (canon w-0.$.host_id $is_active_opt_test  #is_active_opt_iter_canon)
-                                       )
-                                       (xor
-                                        (match #is_active_opt_iter_canon.length 1
-                                         (null)
-                                        )
-                                        (next is_active_opt_fold_var)
-                                       )
-                                      )
-                                      (never)
-                                     )
-                                     (canon w-0.$.host_id $is_active_opt_test  #is_active_opt_result_canon)
-                                    )
-                                    (ap #is_active_opt_result_canon is_active_opt_gate)
-                                   )
-                                  )
-                                 )
-                                 (new $array-inline-2
                                   (seq
-                                   (seq
-                                    (ap "Hello guys!" $array-inline-2)
-                                    (ap is_active_opt_gate.$.[0] $array-inline-2)
-                                   )
-                                   (canon w-0.$.host_id $array-inline-2  #array-inline-2-0)
+                                   (ap "Deal is inactive on this host, have you deposited enough funds?" $array-inline-3)
+                                   (ap w-1.$.host_id $array-inline-3)
                                   )
+                                  (canon w-1.$.host_id $array-inline-3  #array-inline-3-0)
                                  )
                                 )
                                 (par
@@ -357,7 +437,7 @@ export const yourCloudlessFunction_script = `
                                   (new -if-error-
                                    (xor
                                     (match true true
-                                     (call %init_peer_id% ("run-console" "print") [#array-inline-2-0])
+                                     (call %init_peer_id% ("run-console" "print") [#array-inline-3-0])
                                     )
                                     (seq
                                      (ap :error: -if-error-)
@@ -374,82 +454,336 @@ export const yourCloudlessFunction_script = `
                                  (null)
                                 )
                                )
-                               (new -if-else-error-
-                                (new -else-error-
-                                 (new -if-error-
-                                  (xor
-                                   (seq
-                                    (match is_active_opt_gate.$.[0] false
+                               (ap "Deal is not active, worker is not created or not available" $errors)
+                              )
+                             )
+                             (new $-ephemeral-stream-
+                              (new #-ephemeral-canon-
+                               (canon yieldOn_gate.$.[0] $-ephemeral-stream-  #-ephemeral-canon-)
+                              )
+                             )
+                            )
+                            (seq
+                             (ap :error: -if-error-)
+                             (xor
+                              (match :error:.$.error_code 10001
+                               (seq
+                                (seq
+                                 (new $array-inline-4
+                                  (seq
+                                   (ap "Deal is active, okay" $array-inline-4)
+                                   (canon w-1.$.host_id $array-inline-4  #array-inline-4-0)
+                                  )
+                                 )
+                                 (par
+                                  (seq
+                                   (new $-ephemeral-stream-
+                                    (new #-ephemeral-canon-
+                                     (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
+                                    )
+                                   )
+                                   (new -if-error-
+                                    (xor
+                                     (match true true
+                                      (call %init_peer_id% ("run-console" "print") [#array-inline-4-0])
+                                     )
                                      (seq
-                                      (seq
-                                       (new $array-inline-3
-                                        (seq
-                                         (seq
-                                          (ap "Deal is inactive on this host, have you deposited enough funds?" $array-inline-3)
-                                          (ap w-0.$.host_id $array-inline-3)
-                                         )
-                                         (canon w-0.$.host_id $array-inline-3  #array-inline-3-0)
-                                        )
-                                       )
-                                       (par
-                                        (seq
-                                         (new $-ephemeral-stream-
-                                          (new #-ephemeral-canon-
-                                           (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
-                                          )
-                                         )
-                                         (new -if-error-
-                                          (xor
-                                           (match true true
-                                            (call %init_peer_id% ("run-console" "print") [#array-inline-3-0])
-                                           )
-                                           (seq
-                                            (ap :error: -if-error-)
-                                            (xor
-                                             (match :error:.$.error_code 10001
-                                              (null)
-                                             )
-                                             (fail -if-error-)
-                                            )
-                                           )
-                                          )
-                                         )
-                                        )
+                                      (ap :error: -if-error-)
+                                      (xor
+                                       (match :error:.$.error_code 10001
                                         (null)
                                        )
+                                       (fail -if-error-)
                                       )
-                                      (ap "Deal is not active, worker is not created or not available" $errors)
-                                     )
-                                    )
-                                    (new $-ephemeral-stream-
-                                     (new #-ephemeral-canon-
-                                      (canon yieldOn_gate.$.[0] $-ephemeral-stream-  #-ephemeral-canon-)
                                      )
                                     )
                                    )
+                                  )
+                                  (null)
+                                 )
+                                )
+                                (par
+                                 (seq
+                                  (new $array-inline-5
                                    (seq
-                                    (ap :error: -if-error-)
-                                    (xor
-                                     (match :error:.$.error_code 10001
+                                    (seq
+                                     (seq
+                                      (seq
+                                       (ap "Going go " $array-inline-5)
+                                       (ap w-1.$.worker_id.[0] $array-inline-5)
+                                      )
+                                      (ap "via" $array-inline-5)
+                                     )
+                                     (ap w-1.$.host_id $array-inline-5)
+                                    )
+                                    (canon w-1.$.host_id $array-inline-5  #array-inline-5-0)
+                                   )
+                                  )
+                                  (par
+                                   (seq
+                                    (new $-ephemeral-stream-
+                                     (new #-ephemeral-canon-
+                                      (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
+                                     )
+                                    )
+                                    (new -if-error-
+                                     (xor
+                                      (match true true
+                                       (call %init_peer_id% ("run-console" "print") [#array-inline-5-0])
+                                      )
+                                      (seq
+                                       (ap :error: -if-error-)
+                                       (xor
+                                        (match :error:.$.error_code 10001
+                                         (null)
+                                        )
+                                        (fail -if-error-)
+                                       )
+                                      )
+                                     )
+                                    )
+                                   )
+                                   (null)
+                                  )
+                                 )
+                                 (xor
+                                  (seq
+                                   (seq
+                                    (new $array-inline-6
+                                     (seq
+                                      (seq
+                                       (ap "got compute job on" $array-inline-6)
+                                       (ap w-1.$.worker_id.[0] $array-inline-6)
+                                      )
+                                      (canon w-1.$.worker_id.[0] $array-inline-6  #array-inline-6-0)
+                                     )
+                                    )
+                                    (par
+                                     (seq
+                                      (seq
+                                       (new $-ephemeral-stream-
+                                        (new #-ephemeral-canon-
+                                         (canon w-1.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
+                                        )
+                                       )
+                                       (new $-ephemeral-stream-
+                                        (new #-ephemeral-canon-
+                                         (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
+                                        )
+                                       )
+                                      )
+                                      (new -if-error-
+                                       (xor
+                                        (match true true
+                                         (call %init_peer_id% ("run-console" "print") [#array-inline-6-0])
+                                        )
+                                        (seq
+                                         (ap :error: -if-error-)
+                                         (xor
+                                          (match :error:.$.error_code 10001
+                                           (null)
+                                          )
+                                          (fail -if-error-)
+                                         )
+                                        )
+                                       )
+                                      )
+                                     )
+                                     (null)
+                                    )
+                                   )
+                                   (xor
+                                    (seq
+                                     (seq
+                                      (seq
+                                       (new $err-0
+                                        (xor
+                                         (seq
+                                          (new -if-else-error-
+                                           (new -else-error-
+                                            (new -if-error-
+                                             (xor
+                                              (seq
+                                               (match [] []
+                                                (seq
+                                                 (seq
+                                                  (seq
+                                                   (new $array-inline-7
+                                                    (seq
+                                                     (ap "About to start working" $array-inline-7)
+                                                     (canon w-1.$.worker_id.[0] $array-inline-7  #array-inline-7-0)
+                                                    )
+                                                   )
+                                                   (par
+                                                    (seq
+                                                     (seq
+                                                      (new $-ephemeral-stream-
+                                                       (new #-ephemeral-canon-
+                                                        (canon w-1.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
+                                                       )
+                                                      )
+                                                      (new $-ephemeral-stream-
+                                                       (new #-ephemeral-canon-
+                                                        (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
+                                                       )
+                                                      )
+                                                     )
+                                                     (new -if-error-
+                                                      (xor
+                                                       (match true true
+                                                        (call %init_peer_id% ("run-console" "print") [#array-inline-7-0])
+                                                       )
+                                                       (seq
+                                                        (ap :error: -if-error-)
+                                                        (xor
+                                                         (match :error:.$.error_code 10001
+                                                          (null)
+                                                         )
+                                                         (fail -if-error-)
+                                                        )
+                                                       )
+                                                      )
+                                                     )
+                                                    )
+                                                    (null)
+                                                   )
+                                                  )
+                                                  (call w-1.$.worker_id.[0] ("myService" "greeting") ["Hello from worker"] ret-1)
+                                                 )
+                                                 (ap ret-1 $res)
+                                                )
+                                               )
+                                               (new $-ephemeral-stream-
+                                                (new #-ephemeral-canon-
+                                                 (canon w-1.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
+                                                )
+                                               )
+                                              )
+                                              (seq
+                                               (seq
+                                                (ap :error: -if-error-)
+                                                (xor
+                                                 (seq
+                                                  (match :error:.$.error_code 10001
+                                                   (seq
+                                                    (seq
+                                                     (ap [] literal_ap-0)
+                                                     (ap literal_ap-0 literal_props-0)
+                                                    )
+                                                    (ap literal_props-0.$.[0] $err-0)
+                                                   )
+                                                  )
+                                                  (new $-ephemeral-stream-
+                                                   (new #-ephemeral-canon-
+                                                    (canon w-1.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
+                                                   )
+                                                  )
+                                                 )
+                                                 (seq
+                                                  (seq
+                                                   (seq
+                                                    (ap :error: -else-error-)
+                                                    (xor
+                                                     (seq
+                                                      (match :error:.$.error_code 10001
+                                                       (ap -if-error- -if-else-error-)
+                                                      )
+                                                      (new $-ephemeral-stream-
+                                                       (new #-ephemeral-canon-
+                                                        (canon w-1.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
+                                                       )
+                                                      )
+                                                     )
+                                                     (seq
+                                                      (ap -else-error- -if-else-error-)
+                                                      (new $-ephemeral-stream-
+                                                       (new #-ephemeral-canon-
+                                                        (canon w-1.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
+                                                       )
+                                                      )
+                                                     )
+                                                    )
+                                                   )
+                                                   (fail -if-else-error-)
+                                                  )
+                                                  (new $-ephemeral-stream-
+                                                   (new #-ephemeral-canon-
+                                                    (canon w-1.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
+                                                   )
+                                                  )
+                                                 )
+                                                )
+                                               )
+                                               (new $-ephemeral-stream-
+                                                (new #-ephemeral-canon-
+                                                 (canon w-1.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
+                                                )
+                                               )
+                                              )
+                                             )
+                                            )
+                                           )
+                                          )
+                                          (new $-ephemeral-stream-
+                                           (new #-ephemeral-canon-
+                                            (canon w-1.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
+                                           )
+                                          )
+                                         )
+                                         (fail :error:)
+                                        )
+                                       )
+                                       (ap w-1 $workers)
+                                      )
+                                      (new $-ephemeral-stream-
+                                       (new #-ephemeral-canon-
+                                        (canon w-1.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
+                                       )
+                                      )
+                                     )
+                                     (new $-ephemeral-stream-
+                                      (new #-ephemeral-canon-
+                                       (canon yieldOn_gate.$.[0] $-ephemeral-stream-  #-ephemeral-canon-)
+                                      )
+                                     )
+                                    )
+                                    (seq
+                                     (seq
                                       (seq
                                        (seq
-                                        (new $array-inline-4
+                                        (new $array-inline-8
                                          (seq
-                                          (ap "Deal is active, okay" $array-inline-4)
-                                          (canon w-0.$.host_id $array-inline-4  #array-inline-4-0)
+                                          (seq
+                                           (seq
+                                            (seq
+                                             (ap "Compute job errored on" $array-inline-8)
+                                             (ap w-1.$.worker_id.[0] $array-inline-8)
+                                            )
+                                            (ap "message:" $array-inline-8)
+                                           )
+                                           (ap :error:.$.message $array-inline-8)
+                                          )
+                                          (canon w-1.$.worker_id.[0] $array-inline-8  #array-inline-8-0)
                                          )
                                         )
                                         (par
                                          (seq
-                                          (new $-ephemeral-stream-
-                                           (new #-ephemeral-canon-
-                                            (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
+                                          (seq
+                                           (new $-ephemeral-stream-
+                                            (new #-ephemeral-canon-
+                                             (canon w-1.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
+                                            )
+                                           )
+                                           (new $-ephemeral-stream-
+                                            (new #-ephemeral-canon-
+                                             (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
+                                            )
                                            )
                                           )
                                           (new -if-error-
                                            (xor
                                             (match true true
-                                             (call %init_peer_id% ("run-console" "print") [#array-inline-4-0])
+                                             (call %init_peer_id% ("run-console" "print") [#array-inline-8-0])
                                             )
                                             (seq
                                              (ap :error: -if-error-)
@@ -466,338 +800,76 @@ export const yourCloudlessFunction_script = `
                                          (null)
                                         )
                                        )
-                                       (par
-                                        (seq
-                                         (new $array-inline-5
-                                          (seq
-                                           (seq
-                                            (seq
-                                             (seq
-                                              (ap "Going go " $array-inline-5)
-                                              (ap w-0.$.worker_id.[0] $array-inline-5)
-                                             )
-                                             (ap "via" $array-inline-5)
-                                            )
-                                            (ap w-0.$.host_id $array-inline-5)
-                                           )
-                                           (canon w-0.$.host_id $array-inline-5  #array-inline-5-0)
-                                          )
-                                         )
-                                         (par
-                                          (seq
-                                           (new $-ephemeral-stream-
-                                            (new #-ephemeral-canon-
-                                             (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
-                                            )
-                                           )
-                                           (new -if-error-
-                                            (xor
-                                             (match true true
-                                              (call %init_peer_id% ("run-console" "print") [#array-inline-5-0])
-                                             )
-                                             (seq
-                                              (ap :error: -if-error-)
-                                              (xor
-                                               (match :error:.$.error_code 10001
-                                                (null)
-                                               )
-                                               (fail -if-error-)
-                                              )
-                                             )
-                                            )
-                                           )
-                                          )
-                                          (null)
-                                         )
-                                        )
-                                        (xor
-                                         (seq
-                                          (seq
-                                           (seq
-                                            (seq
-                                             (seq
-                                              (new $array-inline-6
-                                               (seq
-                                                (seq
-                                                 (ap "got compute job on" $array-inline-6)
-                                                 (ap w-0.$.worker_id.[0] $array-inline-6)
-                                                )
-                                                (canon w-0.$.worker_id.[0] $array-inline-6  #array-inline-6-0)
-                                               )
-                                              )
-                                              (par
-                                               (seq
-                                                (seq
-                                                 (new $-ephemeral-stream-
-                                                  (new #-ephemeral-canon-
-                                                   (canon w-0.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
-                                                  )
-                                                 )
-                                                 (new $-ephemeral-stream-
-                                                  (new #-ephemeral-canon-
-                                                   (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
-                                                  )
-                                                 )
-                                                )
-                                                (new -if-error-
-                                                 (xor
-                                                  (match true true
-                                                   (call %init_peer_id% ("run-console" "print") [#array-inline-6-0])
-                                                  )
-                                                  (seq
-                                                   (ap :error: -if-error-)
-                                                   (xor
-                                                    (match :error:.$.error_code 10001
-                                                     (null)
-                                                    )
-                                                    (fail -if-error-)
-                                                   )
-                                                  )
-                                                 )
-                                                )
-                                               )
-                                               (null)
-                                              )
-                                             )
-                                             (new $err-0
-                                              (xor
-                                               (seq
-                                                (new -if-else-error-
-                                                 (new -else-error-
-                                                  (new -if-error-
-                                                   (xor
-                                                    (seq
-                                                     (match [] []
-                                                      (seq
-                                                       (seq
-                                                        (seq
-                                                         (new $array-inline-7
-                                                          (seq
-                                                           (ap "About to start working" $array-inline-7)
-                                                           (canon w-0.$.worker_id.[0] $array-inline-7  #array-inline-7-0)
-                                                          )
-                                                         )
-                                                         (par
-                                                          (seq
-                                                           (seq
-                                                            (new $-ephemeral-stream-
-                                                             (new #-ephemeral-canon-
-                                                              (canon w-0.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
-                                                             )
-                                                            )
-                                                            (new $-ephemeral-stream-
-                                                             (new #-ephemeral-canon-
-                                                              (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
-                                                             )
-                                                            )
-                                                           )
-                                                           (new -if-error-
-                                                            (xor
-                                                             (match true true
-                                                              (call %init_peer_id% ("run-console" "print") [#array-inline-7-0])
-                                                             )
-                                                             (seq
-                                                              (ap :error: -if-error-)
-                                                              (xor
-                                                               (match :error:.$.error_code 10001
-                                                                (null)
-                                                               )
-                                                               (fail -if-error-)
-                                                              )
-                                                             )
-                                                            )
-                                                           )
-                                                          )
-                                                          (null)
-                                                         )
-                                                        )
-                                                        (call w-0.$.worker_id.[0] ("myService" "greeting") ["Hello from worker"] ret-1)
-                                                       )
-                                                       (ap ret-1 $res)
-                                                      )
-                                                     )
-                                                     (new $-ephemeral-stream-
-                                                      (new #-ephemeral-canon-
-                                                       (canon w-0.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
-                                                      )
-                                                     )
-                                                    )
-                                                    (seq
-                                                     (seq
-                                                      (ap :error: -if-error-)
-                                                      (xor
-                                                       (seq
-                                                        (match :error:.$.error_code 10001
-                                                         (seq
-                                                          (seq
-                                                           (ap [] literal_ap-0)
-                                                           (ap literal_ap-0 literal_props-0)
-                                                          )
-                                                          (ap literal_props-0.$.[0] $err-0)
-                                                         )
-                                                        )
-                                                        (new $-ephemeral-stream-
-                                                         (new #-ephemeral-canon-
-                                                          (canon w-0.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
-                                                         )
-                                                        )
-                                                       )
-                                                       (seq
-                                                        (seq
-                                                         (seq
-                                                          (ap :error: -else-error-)
-                                                          (xor
-                                                           (seq
-                                                            (match :error:.$.error_code 10001
-                                                             (ap -if-error- -if-else-error-)
-                                                            )
-                                                            (new $-ephemeral-stream-
-                                                             (new #-ephemeral-canon-
-                                                              (canon w-0.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
-                                                             )
-                                                            )
-                                                           )
-                                                           (seq
-                                                            (ap -else-error- -if-else-error-)
-                                                            (new $-ephemeral-stream-
-                                                             (new #-ephemeral-canon-
-                                                              (canon w-0.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
-                                                             )
-                                                            )
-                                                           )
-                                                          )
-                                                         )
-                                                         (fail -if-else-error-)
-                                                        )
-                                                        (new $-ephemeral-stream-
-                                                         (new #-ephemeral-canon-
-                                                          (canon w-0.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
-                                                         )
-                                                        )
-                                                       )
-                                                      )
-                                                     )
-                                                     (new $-ephemeral-stream-
-                                                      (new #-ephemeral-canon-
-                                                       (canon w-0.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
-                                                      )
-                                                     )
-                                                    )
-                                                   )
-                                                  )
-                                                 )
-                                                )
-                                                (new $-ephemeral-stream-
-                                                 (new #-ephemeral-canon-
-                                                  (canon w-0.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
-                                                 )
-                                                )
-                                               )
-                                               (fail :error:)
-                                              )
-                                             )
-                                            )
-                                            (ap w-0 $workers)
-                                           )
-                                           (new $-ephemeral-stream-
-                                            (new #-ephemeral-canon-
-                                             (canon w-0.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
-                                            )
-                                           )
-                                          )
-                                          (new $-ephemeral-stream-
-                                           (new #-ephemeral-canon-
-                                            (canon yieldOn_gate.$.[0] $-ephemeral-stream-  #-ephemeral-canon-)
-                                           )
-                                          )
-                                         )
-                                         (fail :error:)
-                                        )
-                                       )
-                                      )
-                                     )
-                                     (seq
-                                      (seq
-                                       (seq
-                                        (ap :error: -else-error-)
-                                        (xor
-                                         (seq
-                                          (match :error:.$.error_code 10001
-                                           (ap -if-error- -if-else-error-)
-                                          )
-                                          (new $-ephemeral-stream-
-                                           (new #-ephemeral-canon-
-                                            (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
-                                           )
-                                          )
-                                         )
-                                         (seq
-                                          (ap -else-error- -if-else-error-)
-                                          (new $-ephemeral-stream-
-                                           (new #-ephemeral-canon-
-                                            (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
-                                           )
-                                          )
-                                         )
-                                        )
-                                       )
-                                       (fail -if-else-error-)
+                                       (ap :error:.$.message $errors)
                                       )
                                       (new $-ephemeral-stream-
                                        (new #-ephemeral-canon-
-                                        (canon yieldOn_gate.$.[0] $-ephemeral-stream-  #-ephemeral-canon-)
+                                        (canon w-1.$.host_id $-ephemeral-stream-  #-ephemeral-canon-)
                                        )
+                                      )
+                                     )
+                                     (new $-ephemeral-stream-
+                                      (new #-ephemeral-canon-
+                                       (canon yieldOn_gate.$.[0] $-ephemeral-stream-  #-ephemeral-canon-)
                                       )
                                      )
                                     )
                                    )
                                   )
+                                  (fail :error:)
                                  )
                                 )
                                )
                               )
-                              (fail :error:)
+                              (seq
+                               (seq
+                                (seq
+                                 (ap :error: -else-error-)
+                                 (xor
+                                  (seq
+                                   (match :error:.$.error_code 10001
+                                    (ap -if-error- -if-else-error-)
+                                   )
+                                   (new $-ephemeral-stream-
+                                    (new #-ephemeral-canon-
+                                     (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
+                                    )
+                                   )
+                                  )
+                                  (seq
+                                   (ap -else-error- -if-else-error-)
+                                   (new $-ephemeral-stream-
+                                    (new #-ephemeral-canon-
+                                     (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
+                                    )
+                                   )
+                                  )
+                                 )
+                                )
+                                (fail -if-else-error-)
+                               )
+                               (new $-ephemeral-stream-
+                                (new #-ephemeral-canon-
+                                 (canon yieldOn_gate.$.[0] $-ephemeral-stream-  #-ephemeral-canon-)
+                                )
+                               )
+                              )
                              )
                             )
-                            (next w-0)
                            )
-                           (never)
                           )
-                          (null)
                          )
-                        )
-                        (seq
-                         (seq
-                          (ap :error: -else-error-)
-                          (xor
-                           (seq
-                            (match :error:.$.error_code 10001
-                             (ap -if-error- -if-else-error-)
-                            )
-                            (new $-ephemeral-stream-
-                             (new #-ephemeral-canon-
-                              (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
-                             )
-                            )
-                           )
-                           (seq
-                            (ap -else-error- -if-else-error-)
-                            (new $-ephemeral-stream-
-                             (new #-ephemeral-canon-
-                              (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
-                             )
-                            )
-                           )
-                          )
-                         )
-                         (fail -if-else-error-)
                         )
                        )
+                       (fail :error:)
                       )
                      )
+                     (next w-1)
                     )
+                    (never)
                    )
                   )
+                  (null)
                  )
                  (fail :error:)
                 )
