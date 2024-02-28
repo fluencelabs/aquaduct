@@ -41,37 +41,45 @@ func simple{Compute, Logger}(coordinator: ?PeerId, yield: Yield) -> Function:
 
       workers: *Worker
       on host:
-        for w <- resolveSubnet{Logger}(deal_id, errors) par:
-          on w.host_id:
-            is_active_opt: *bool
-            try:
-              is_active_opt <- WLibW.is_active(deal_id)
-            catch e:
-              errors <<- e.message
-              is_active_opt <<- false
+        subn <- resolveSubnet{Logger}(deal_id, errors)
+      log(["Subnet is resolved", subn])       
+      parseq w <- subn on w.worker_id! via w.host_id via host:
+        is_active_opt: *bool
+        on w.host_id:
+          try:
+            is_active_opt <- WLibW.is_active(deal_id)
+          catch e:
+            errors <<- e.message
+            is_active_opt <<- false
 
-            is_active = is_active_opt!
-            log(["Hello guys!", is_active])
-            if is_active == false:
-              log(["Deal is inactive on this host, have you deposited enough funds?", w.host_id])
-              errors <<- "Deal is not active, worker is not created or not available"
-            else:
-              log(["Deal is active, okay"])
+        is_active = is_active_opt!
+        log(["Hello guys!", is_active, w.host_id])
+        if is_active == false:
+          log(["Deal is inactive on this host, have you deposited enough funds?", w.host_id])
+          errors <<- "Deal is not active, worker is not created or not available"
+        else:
+          log(["Deal is active, okay"])
 
-              log(["Going go ", w.worker_id!, "via", w.host_id])
-              par on w.worker_id! via w.host_id:
-                job <- Compute.job(w)
-                log(["got compute job on", w.worker_id!])
-                try:
-                  job.run(promise)
-                  workers <<- w
-                catch e:
-                  log(["Compute job errored on", w.worker_id!, "message:", e.message])
-                  errors <<- e.message
+          log(["Going go ", w.worker_id!, "via", w.host_id])
+          
+          job <- Compute.job(w)
+          log(["got compute job on", w.worker_id!])
+          try:
+            job.run(promise)
+            log(["Going to add a worker to done workers"])
+            workers <<- w
+          catch e:
+            log(["Compute job errored on", w.worker_id!, "message:", e.message])
+            errors <<- e.message
+
+      c_yield = func (w: Worker) -> ?Error:
+        <- Compute.yield(w)
 
       new_yield = func () -> ?Error:
-        y <- yield(workers, errors, Compute.yield)
+        log(["Running new yield"])
+        y <- yield(workers, errors, c_yield)
         new_errs <- y.yield()
+        log(["YIELDED WHAT?!!", new_errs])
         <- new_errs
       <- Promise(yield = new_yield)
 
@@ -133,11 +141,6 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
               pr <- job.run(Promise.done())
               log([w.worker_id!, "Got a Promise"])
 
-              -- TODO: temporary shit
-              z <- pr.yield()
-              log([w.worker_id!, "Promise yielded"])
-              log(z)
-
               -- Workers is a stream of workers that have the job triggered/scheduled
               workers <<- w
           else:
@@ -145,7 +148,10 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
 
       parseq p <- peers on p:
         -- Independently, need to wait for the required number of workers to succeed before proceeding
-        y <- yield(workers, errors, Compute.yield)
+        c_yield = func (w: Worker) -> ?Error:
+          <- Compute.yield(w)
+        log(["on parsec ABOUT TO YIELD", p])  
+        y <- yield(workers, errors, c_yield)
         pushAll(errors, y.yield())
         log(["Yielded on workers", p])
         -- fastest ingoing, this outgoing

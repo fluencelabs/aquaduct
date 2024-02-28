@@ -50,7 +50,13 @@ func yourCloudlessFunction() -> []string:
   -- If you need time or such things, do a short hop to w.host_id.
   start = func (w: Worker):
     logger.log(["About to start working"])
-    res <- MyService.greeting("Hello from worker")
+    try:
+      r <- MyService.greeting("Hello from worker")
+      logger.log(["Yep, it works here", r])
+      res <<- r
+    catch e:
+      logger.log(["MyService.greeting call failed", e.message])
+        
 
   -- This closure is to find out whether given worker completed the job
   -- Like, find worker_id in res stream, join on the result (to trigger waiting)...
@@ -73,8 +79,8 @@ func yourCloudlessFunction() -> []string:
   -- Disjoint can be used to protect from censoring your subnet by getting to subnet workers through disjoint paths.
   -- Simple resolves the subnet on a single given peer, or, if omitted, on the relay.
   -- Cloudless_Yield.wait_for_k will wait for this number of responses before considering success.
-  fn = Cloudless_Make.simple{comp, logger}(nil, Cloudless_Yield.wait_for(1, 1))
-  -- fn = Cloudless_Make.disjoint{comp}([HOST_PEER_ID], Cloudless_Yield.wait_for_k(2), log)
+  fn = Cloudless_Make.simple{comp, logger}(nil, Cloudless_Yield.wait_for{logger}(1, 1))
+  --fn = Cloudless_Make.disjoint{comp, logger}([HOST_PEER_ID], Cloudless_Yield.wait_for{logger}(1, 1))
 
   --
   -- Execute Cloud Function
@@ -84,7 +90,7 @@ func yourCloudlessFunction() -> []string:
   -- Another option is fireAndForget. In this case, you should not expect any result returned to you.
   -- First argument is your deal id to resolve the deployed subnet.
   -- Second argument is where the function will yield. It's more efficient to do it on HOST_PEER_ID, but can do it on INIT_PEER_ID if you like.
-  errs <- Cloudless_Exec.roundtrip{fn}(dealId, ?[HOST_PEER_ID])
+  errs <- Cloudless_Exec.roundtrip{fn, logger}(dealId, ?[HOST_PEER_ID])
 
   if errs != nil:
     new_errs <- prepend("Errors:", errs)

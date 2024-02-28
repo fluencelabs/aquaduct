@@ -52,7 +52,7 @@ export const yourCloudlessFunction_script = `
                    )
                    (ap ("definition" "bafkreifdxe5sf54ss5euzj3gcmfewt3sx4f6en7hqg24tdry4fx6jhyt3m") %Deal_obj_map)
                   )
-                  (ap ("timestamp" "2024-02-27T13:58:06.258Z") %Deal_obj_map)
+                  (ap ("timestamp" "2024-02-27T15:43:17.929Z") %Deal_obj_map)
                  )
                  (canon %init_peer_id% %Deal_obj_map  Deal_obj)
                 )
@@ -877,95 +877,279 @@ export const yourCloudlessFunction_script = `
               )
              )
              (new $new_error
-              (seq
+              (new $ok-0
                (seq
                 (seq
                  (seq
                   (seq
                    (seq
-                    (par
-                     (new $workers_test
-                      (seq
-                       (seq
-                        (fold $workers workers_fold_var
-                         (seq
-                          (seq
-                           (ap workers_fold_var $workers_test)
-                           (canon yieldOn_gate.$.[0] $workers_test  #workers_iter_canon)
-                          )
-                          (xor
-                           (match #workers_iter_canon.length 1
-                            (null)
-                           )
-                           (next workers_fold_var)
-                          )
-                         )
-                         (never)
-                        )
-                        (canon yieldOn_gate.$.[0] $workers_test  #workers_result_canon)
-                       )
-                       (ap #workers_result_canon workers_gate)
-                      )
-                     )
-                     (new $errors_test
-                      (seq
-                       (seq
-                        (fold $errors errors_fold_var
-                         (seq
-                          (seq
-                           (ap errors_fold_var $errors_test)
-                           (canon yieldOn_gate.$.[0] $errors_test  #errors_iter_canon)
-                          )
-                          (xor
-                           (match #errors_iter_canon.length 1
-                            (null)
-                           )
-                           (next errors_fold_var)
-                          )
-                         )
-                         (never)
-                        )
-                        (canon yieldOn_gate.$.[0] $errors_test  #errors_result_canon)
-                       )
-                       (ap #errors_result_canon errors_gate)
-                      )
-                     )
-                    )
-                    (canon yieldOn_gate.$.[0] $errors  #errors_to_functor)
-                   )
-                   (ap #errors_to_functor.length errors_length)
-                  )
-                  (call yieldOn_gate.$.[0] ("cmp" "gte") [errors_length 1] gte)
-                 )
-                 (new -if-error-
-                  (xor
-                   (match gte true
                     (seq
-                     (canon yieldOn_gate.$.[0] $errors  #errors_canon)
-                     (fold #errors_canon a-1-0
-                      (seq
-                       (ap a-1-0 $new_error)
-                       (next a-1-0)
+                     (seq
+                      (par
+                       (fold $workers w-3-0
+                        (par
+                         (seq
+                          (seq
+                           (seq
+                            (seq
+                             (seq
+                              (new $array-inline-9
+                               (seq
+                                (ap "About to join res!" $array-inline-9)
+                                (canon yieldOn_gate.$.[0] $array-inline-9  #array-inline-9-0)
+                               )
+                              )
+                              (par
+                               (seq
+                                (new $-ephemeral-stream-
+                                 (new #-ephemeral-canon-
+                                  (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
+                                 )
+                                )
+                                (new -if-error-
+                                 (xor
+                                  (match true true
+                                   (call %init_peer_id% ("run-console" "print") [#array-inline-9-0])
+                                  )
+                                  (seq
+                                   (ap :error: -if-error-)
+                                   (xor
+                                    (match :error:.$.error_code 10001
+                                     (null)
+                                    )
+                                    (fail -if-error-)
+                                   )
+                                  )
+                                 )
+                                )
+                               )
+                               (null)
+                              )
+                             )
+                             (new $res_test
+                              (seq
+                               (seq
+                                (fold $res res_fold_var
+                                 (seq
+                                  (seq
+                                   (ap res_fold_var $res_test)
+                                   (canon yieldOn_gate.$.[0] $res_test  #res_iter_canon)
+                                  )
+                                  (xor
+                                   (match #res_iter_canon.length 1
+                                    (null)
+                                   )
+                                   (next res_fold_var)
+                                  )
+                                 )
+                                 (never)
+                                )
+                                (canon yieldOn_gate.$.[0] $res_test  #res_result_canon)
+                               )
+                               (ap #res_result_canon res_gate)
+                              )
+                             )
+                            )
+                            (ap [] literal_ap-1)
+                           )
+                           (ap literal_ap-1 literal_props-1)
+                          )
+                          (new -if-else-error-
+                           (new -else-error-
+                            (new -if-error-
+                             (xor
+                              (match literal_props-1 []
+                               (ap true $ok-0)
+                              )
+                              (seq
+                               (ap :error: -if-error-)
+                               (xor
+                                (match :error:.$.error_code 10001
+                                 (seq
+                                  (seq
+                                   (seq
+                                    (seq
+                                     (seq
+                                      (new $array-inline-10
+                                       (seq
+                                        (ap "About to join res!" $array-inline-10)
+                                        (canon yieldOn_gate.$.[0] $array-inline-10  #array-inline-10-0)
+                                       )
+                                      )
+                                      (par
+                                       (seq
+                                        (new $-ephemeral-stream-
+                                         (new #-ephemeral-canon-
+                                          (canon -relay- $-ephemeral-stream-  #-ephemeral-canon-)
+                                         )
+                                        )
+                                        (new -if-error-
+                                         (xor
+                                          (match true true
+                                           (call %init_peer_id% ("run-console" "print") [#array-inline-10-0])
+                                          )
+                                          (seq
+                                           (ap :error: -if-error-)
+                                           (xor
+                                            (match :error:.$.error_code 10001
+                                             (null)
+                                            )
+                                            (fail -if-error-)
+                                           )
+                                          )
+                                         )
+                                        )
+                                       )
+                                       (null)
+                                      )
+                                     )
+                                     (new $res_test-0
+                                      (seq
+                                       (seq
+                                        (fold $res res_fold_var-0
+                                         (seq
+                                          (seq
+                                           (ap res_fold_var-0 $res_test-0)
+                                           (canon yieldOn_gate.$.[0] $res_test-0  #res_iter_canon-0)
+                                          )
+                                          (xor
+                                           (match #res_iter_canon-0.length 1
+                                            (null)
+                                           )
+                                           (next res_fold_var-0)
+                                          )
+                                         )
+                                         (never)
+                                        )
+                                        (canon yieldOn_gate.$.[0] $res_test-0  #res_result_canon-0)
+                                       )
+                                       (ap #res_result_canon-0 res_gate-0)
+                                      )
+                                     )
+                                    )
+                                    (ap [] literal_ap-2)
+                                   )
+                                   (ap literal_ap-2 literal_props-2)
+                                  )
+                                  (fold literal_props-2 a-1-0
+                                   (seq
+                                    (ap a-1-0 $errors)
+                                    (next a-1-0)
+                                   )
+                                   (null)
+                                  )
+                                 )
+                                )
+                                (seq
+                                 (seq
+                                  (ap :error: -else-error-)
+                                  (xor
+                                   (match :error:.$.error_code 10001
+                                    (ap -if-error- -if-else-error-)
+                                   )
+                                   (ap -else-error- -if-else-error-)
+                                  )
+                                 )
+                                 (fail -if-else-error-)
+                                )
+                               )
+                              )
+                             )
+                            )
+                           )
+                          )
+                         )
+                         (next w-3-0)
+                        )
+                        (never)
+                       )
+                       (null)
                       )
-                      (null)
+                      (par
+                       (new $ok-0_test
+                        (seq
+                         (seq
+                          (fold $ok-0 ok-0_fold_var
+                           (seq
+                            (seq
+                             (ap ok-0_fold_var $ok-0_test)
+                             (canon yieldOn_gate.$.[0] $ok-0_test  #ok-0_iter_canon)
+                            )
+                            (xor
+                             (match #ok-0_iter_canon.length 1
+                              (null)
+                             )
+                             (next ok-0_fold_var)
+                            )
+                           )
+                           (never)
+                          )
+                          (canon yieldOn_gate.$.[0] $ok-0_test  #ok-0_result_canon)
+                         )
+                         (ap #ok-0_result_canon ok-0_gate)
+                        )
+                       )
+                       (new $errors_test
+                        (seq
+                         (seq
+                          (fold $errors errors_fold_var
+                           (seq
+                            (seq
+                             (ap errors_fold_var $errors_test)
+                             (canon yieldOn_gate.$.[0] $errors_test  #errors_iter_canon)
+                            )
+                            (xor
+                             (match #errors_iter_canon.length 1
+                              (null)
+                             )
+                             (next errors_fold_var)
+                            )
+                           )
+                           (never)
+                          )
+                          (canon yieldOn_gate.$.[0] $errors_test  #errors_result_canon)
+                         )
+                         (ap #errors_result_canon errors_gate)
+                        )
+                       )
+                      )
+                     )
+                     (canon yieldOn_gate.$.[0] $errors  #errors_to_functor)
+                    )
+                    (ap #errors_to_functor.length errors_length)
+                   )
+                   (call yieldOn_gate.$.[0] ("cmp" "gte") [errors_length 1] gte)
+                  )
+                  (new -if-error-
+                   (xor
+                    (match gte true
+                     (seq
+                      (canon yieldOn_gate.$.[0] $errors  #errors_canon)
+                      (fold #errors_canon a-2-0
+                       (seq
+                        (ap a-2-0 $new_error)
+                        (next a-2-0)
+                       )
+                       (null)
+                      )
                      )
                     )
-                   )
-                   (seq
-                    (ap :error: -if-error-)
-                    (xor
-                     (match :error:.$.error_code 10001
-                      (null)
+                    (seq
+                     (ap :error: -if-error-)
+                     (xor
+                      (match :error:.$.error_code 10001
+                       (null)
+                      )
+                      (fail -if-error-)
                      )
-                     (fail -if-error-)
                     )
                    )
                   )
                  )
+                 (canon yieldOn_gate.$.[0] $new_error  #-new_error-fix-0)
                 )
-                (canon yieldOn_gate.$.[0] $new_error  #-new_error-fix-0)
+                (ap #-new_error-fix-0 -new_error-flat-0)
                )
-               (ap #-new_error-fix-0 -new_error-flat-0)
               )
              )
             )
@@ -1004,10 +1188,10 @@ export const yourCloudlessFunction_script = `
               (seq
                (seq
                 (ap "Errors:" $stream-anon-0)
-                (fold -new_error-flat-0 a-2-0
+                (fold -new_error-flat-0 a-3-0
                  (seq
-                  (ap a-2-0 $stream-anon-0)
-                  (next a-2-0)
+                  (ap a-3-0 $stream-anon-0)
+                  (next a-3-0)
                  )
                  (null)
                 )

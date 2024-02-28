@@ -1,12 +1,13 @@
 aqua Cloudless_Exec declares *
 
 import pushAll from "../utils"
+import Logger from "../logger"
 import Function, DealId from "core" 
 import Error, Promise from "../promise"
 use done from "../promise" as Promise
 
 -- Request, response roundtrip
-func roundtrip{Function}(dealId: DealId, yieldOnPeer: ?string) -> []Error:
+func roundtrip{Function, Logger}(dealId: DealId, yieldOnPeer: ?string) -> []Error:
   yieldOn: *string
   pushAll(yieldOn, yieldOnPeer)
   yieldOn <<- HOST_PEER_ID
@@ -14,7 +15,10 @@ func roundtrip{Function}(dealId: DealId, yieldOnPeer: ?string) -> []Error:
   on yieldOn!:
     -- Next two lines should do nothing on yieldOn peer
     job <- Function.run(dealId)
+    Logger.log(["Got a job for deal id", dealId])
     promise <- job.run(Promise.done())
+
+    Logger.log(["roundtrip: about to yield"])
 
     -- This should actually happen with move to yieldOn
     err <- promise.yield()
