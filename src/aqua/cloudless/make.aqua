@@ -1,6 +1,6 @@
 aqua Cloudless_Make declares *
 
-import PeerId from "@fluencelabs/aqua-lib/builtin.aqua"
+import PeerId, Op from "@fluencelabs/aqua-lib/builtin.aqua"
 import Subnet, Worker from "@fluencelabs/aqua-lib/subnet.aqua"
 import Worker as WLibW from "@fluencelabs/aqua-lib/workers.aqua"
 import pushAll, optOr, contains from "../utils"
@@ -12,11 +12,11 @@ import Job, j_timeout from "../job"
 use done from "../promise" as Promise
 import Compute from "../compute"
 import Yield from "yield"
-import Logger from "../logger"
+import Logger, prefixed_log from "../logger"
 
 func resolveSubnet{Logger}(deal_id: DealId, errors: *Error) -> []Worker:
   subnet <- Subnet.resolve(deal_id)
-  Logger.log(["Subnet resolved to:", subnet])
+  Logger.log(["resolveSubnet", "subnet=", subnet])
   workers: *Worker
   if subnet.success == false:
     Logger.log(["Subnet resolve failed"])
@@ -85,6 +85,35 @@ func simple{Compute, Logger}(coordinator: ?PeerId, yield: Yield) -> Function:
 
     <- Job(run = run)
   <- Function(run = deal_run)
+
+-- Executor must make sure that job is running on a host
+func simple2{Compute, Logger}(yield: Yield) -> Function:
+  log = prefixed_log{Logger}("Make.simple2")
+
+  deal_run = func (deal_id: DealId) -> Job:
+    errors: *Error
+
+    run = func (promise: Promise) -> Promise:
+      workers: *Worker
+
+      subn <- resolveSubnet{Logger}(deal_id, errors)
+
+      for w <- subn par:
+       on w.worker_id! via w.host_id:
+        j <- Compute.job(w)
+        j.run(promise)
+        workers <<- w
+
+      new_yield = func () -> ?Error:
+        log(["Running new yield"])
+        y <- yield(workers, errors, Compute.yield)
+        new_errs <- y.yield()
+        log(["new_errs =", new_errs])
+        <- new_errs
+      <- Promise(yield = new_yield)
+
+    <- Job(run = run)
+  <- Function(run = deal_run)        
 
 -- Compute: will be triggered on every worker that could be reached.
 --        If subnet-scale coordination is needed, Compute must conduct it

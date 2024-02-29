@@ -13,7 +13,7 @@ use "cloudless/yield"
 
 use "compute"
 import Error from "promise"
-import local as make_logger from "logger"
+import local as make_logger, prefixed_log from "logger"
 import prepend from "utils"
 
 
@@ -49,20 +49,23 @@ func yourCloudlessFunction() -> []string:
   -- All your services are available here. And builtin ones.
   -- If you need time or such things, do a short hop to w.host_id.
   start = func (w: Worker):
-    logger.log(["About to start working"])
+    wlog = prefixed_log{logger}("W.start")
+
+    wlog([w.worker_id!, "About to start working"])
     try:
-      r <- MyService.greeting("Hello from worker")
-      logger.log(["Yep, it works here", r])
+      r <- MyService.greeting("-works-ok-")
+      wlog([w.worker_id!, "MyService.greeting", r])
       res <<- r
     catch e:
-      logger.log(["MyService.greeting call failed", e.message])
+      -- TODO it is handled with runner already
+      wlog([w.worker_id!, "MyService.greeting call failed", e.message])
         
 
   -- This closure is to find out whether given worker completed the job
   -- Like, find worker_id in res stream, join on the result (to trigger waiting)...
   -- Or return errors
   yield = func (w: Worker) -> ?Error:
-    logger.log(["About to join res!"])
+    logger.log(["W.yield", w.worker_id!, "About to join res!"])
     join res!
     -- TODO: find this worker in res...
     <- nil
@@ -79,7 +82,7 @@ func yourCloudlessFunction() -> []string:
   -- Disjoint can be used to protect from censoring your subnet by getting to subnet workers through disjoint paths.
   -- Simple resolves the subnet on a single given peer, or, if omitted, on the relay.
   -- Cloudless_Yield.wait_for_k will wait for this number of responses before considering success.
-  fn = Cloudless_Make.simple{comp, logger}(nil, Cloudless_Yield.wait_for{logger}(1, 1))
+  fn = Cloudless_Make.simple2{comp, logger}(Cloudless_Yield.wait_for{logger}(1, 1))
   --fn = Cloudless_Make.disjoint{comp, logger}([HOST_PEER_ID], Cloudless_Yield.wait_for{logger}(1, 1))
 
   --

@@ -3,7 +3,7 @@ aqua Cloudless_Yield declares *
 import Worker from "@fluencelabs/aqua-lib/subnet.aqua"
 import Promise, Error from "../promise"
 import pushAll from "../utils"
-import Logger from "../logger"
+import Logger, prefixed from "../logger"
 
 alias WorkerYield: Worker -> ?Error
 alias Yield: *Worker, *Error, WorkerYield -> Promise
@@ -14,16 +14,19 @@ alias Yield: *Worker, *Error, WorkerYield -> Promise
 
 -- Wait for K replies, no matter the quality of replies, success/err
 func wait_for{Logger}(success: u8, error: u8) -> Yield:
+  l2 = prefixed{Logger}("Yield.wait_for")
+  log = l2.log
+
   wait = func (ws: *Worker, err: *Error, cb: Worker -> ?Error) -> Promise:
     yield = func () -> ?Error:
       ok: *bool
-      Logger.log(["YIELD IS CALLED!!!!!!!!!!!!!!!!!!!!"])
+      log(["is called"])
 
       -- I hope that it will not canonicalize ws, need to check
       for w <- ws rec:
-        Logger.log(["YIELD", "Got a worker", w])
+        log(["Got a worker", w])
         e <- cb(w)
-        Logger.log(["YIELD", "Errors are", e])
+        log(["Errors are", e])
         if e == nil:
           ok <<- true
         else:  
@@ -35,7 +38,7 @@ func wait_for{Logger}(success: u8, error: u8) -> Yield:
       join ok[success-1]
       par join err[error-1]
 
-      Logger.log(["YIELD", "Joined"])
+      log(["Joined"])
 
       new_error: *Error
       if err.length >= error:
