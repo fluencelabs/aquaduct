@@ -91,11 +91,9 @@ func simple2{Compute, Logger}(yield: Yield) -> Function:
   log = prefixed_log{Logger}("Make.simple2")
 
   deal_run = func (deal_id: DealId) -> Job:
+    workers: *Worker
     errors: *Error
-
     run = func (promise: Promise) -> Promise:
-      workers: *Worker
-
       subn <- resolveSubnet{Logger}(deal_id, errors)
 
       for w <- subn par:
