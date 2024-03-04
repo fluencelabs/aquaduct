@@ -52,13 +52,9 @@ func yourCloudlessFunction() -> []string:
     wlog = prefixed_log{logger}("W.start")
 
     wlog([w.worker_id!, "About to start working"])
-    try:
-      r <- MyService.greeting("-works-ok-")
-      wlog([w.worker_id!, "MyService.greeting", r])
-      res <<- r
-    catch e:
-      -- TODO it is handled with runner already
-      wlog([w.worker_id!, "MyService.greeting call failed", e.message])
+    r <- MyService.greeting("-works-ok-")
+    wlog([w.worker_id!, "MyService.greeting", r])
+    res <<- r
         
 
   -- This closure is to find out whether given worker completed the job
