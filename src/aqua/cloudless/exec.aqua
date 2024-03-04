@@ -12,9 +12,8 @@ func roundtrip{Function, Logger}(dealId: DealId, yieldOnHost: ?string) -> []Erro
 
   on host:
     -- Function.run must begin on a peer that is a host
-    job <- Function.run(dealId)
     Logger.log(["roundtrip", "Got a job for deal id", dealId])
-    promise <- job.run(Promise.done())
+    promise <- Function.run(dealId, Promise.done())
 
     -- Should move
     err <- promise.yield()
@@ -25,6 +24,5 @@ func roundtrip{Function, Logger}(dealId: DealId, yieldOnHost: ?string) -> []Erro
 func fireAndForget{Function}(dealId: DealId):
   run = func ():
     on HOST_PEER_ID:
-      job <- Function.run(dealId)
-      job.run(Promise.done())
+      Function.run(dealId, Promise.done())
   co run()  

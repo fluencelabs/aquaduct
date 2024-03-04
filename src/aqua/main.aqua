@@ -35,7 +35,7 @@ func yourCloudlessFunction() -> []string:
   -- Prepare logging for debugability
   --
 
-  logger = make_logger(true)
+  logger = make_logger(false)
 
   --
   -- Express your compute function
@@ -82,7 +82,7 @@ func yourCloudlessFunction() -> []string:
   -- Disjoint can be used to protect from censoring your subnet by getting to subnet workers through disjoint paths.
   -- Simple resolves the subnet on a single given peer, or, if omitted, on the relay.
   -- Cloudless_Yield.wait_for_k will wait for this number of responses before considering success.
-  fn = Cloudless_Make.simple2{comp, logger}(Cloudless_Yield.wait_for{logger}(1, 1))
+  fn = Cloudless_Make.disjoint{comp, logger}([HOST_PEER_ID], Cloudless_Yield.wait_for{logger}(1, 1))
   --fn = Cloudless_Make.disjoint{comp, logger}([HOST_PEER_ID], Cloudless_Yield.wait_for{logger}(1, 1))
 
   --
