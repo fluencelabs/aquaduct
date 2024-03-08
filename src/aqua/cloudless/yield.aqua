@@ -3,22 +3,47 @@ aqua Cloudless_Yield declares *
 import Worker from "@fluencelabs/aqua-lib/subnet.aqua"
 import Promise, Error from "../promise"
 import pushAll from "../utils"
+import Logger, prefixed from "../logger"
 
-alias Yield: *Worker, *Error -> Promise
+alias WorkerYield: Worker -> ?Error
+alias Yield: *Worker, *Error, WorkerYield -> Promise
 
 --
 -- Strategies for Cloudless Functions
 --
 
 -- Wait for K replies, no matter the quality of replies, success/err
-func wait_for(success: u8, error: u8) -> Yield:
-  wait = func (ws: *Worker, err: *Error) -> Promise:
+func wait_for{Logger}(success: u8, error: u8) -> Yield:
+  l2 = prefixed{Logger}("Yield.wait_for")
+  log = l2.log
+
+  wait = func (ws: *Worker, err: *Error, cb: Worker -> ?Error) -> Promise:
     yield = func () -> ?Error:
-      join ws[success-1]
+      ok: *bool
+      log(["is called"])
+      
+      -- I hope that it will not canonicalize ws, need to check
+      for w <- ws rec:
+        log(["Got a worker", w])
+        e <- cb(w)
+        log(["Errors are", e])
+        if e == nil:
+          ok <<- true
+        else:  
+          pushAll(err, e)
+
+      -- TODO not absolutely correct:
+      -- ignores errors that happen BEFORE we can reach workers
+      -- but they might be fatal
+      join ok[success-1]
       par join err[error-1]
+
+      log(["Joined", err, err.length, error])
+
       new_error: *Error
       if err.length >= error:
         pushAll(new_error, err)
+        --log(["Finally, errored!", new_error])
 
       <- new_error
     <- Promise(yield = yield)

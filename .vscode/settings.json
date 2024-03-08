@@ -1,0 +1,8 @@
+{
+  "aquaSettings.imports": [
+    "/Users/office/IdeaProjects/aqueduct/.fluence/aqua",
+    "/Users/office/.fluence/npm/@fluencelabs/aqua-lib/0.7.7/node_modules",
+    "/Users/office/.fluence/npm/@fluencelabs/spell/0.5.28/node_modules",
+    "/Users/office/.fluence/npm/@fluencelabs/registry/0.8.7/node_modules"
+  ]
+}
