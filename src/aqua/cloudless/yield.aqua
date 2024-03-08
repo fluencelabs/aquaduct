@@ -38,11 +38,12 @@ func wait_for{Logger}(success: u8, error: u8) -> Yield:
       join ok[success-1]
       par join err[error-1]
 
-      log(["Joined"])
+      log(["Joined", err, err.length, error])
 
       new_error: *Error
       if err.length >= error:
         pushAll(new_error, err)
+        --log(["Finally, errored!", new_error])
 
       <- new_error
     <- Promise(yield = yield)

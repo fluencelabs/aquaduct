@@ -17,6 +17,7 @@ func roundtrip{Function, Logger}(dealId: DealId, yieldOnHost: ?string) -> []Erro
 
     -- Should move
     err <- promise.yield()
+    --Logger.log(["Promise's err:", err])
 
   <- err
 

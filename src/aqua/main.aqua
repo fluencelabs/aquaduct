@@ -21,10 +21,10 @@ import prepend from "utils"
 -- https://fluence.dev
 
 
-export yourCloudlessFunction
+export cloudless
 
 -- Mind the return type: it could be different
-func yourCloudlessFunction() -> []string:
+func cloudless() -> []string:
   --
   -- Read deal info from configuration – need to deploy first
   --
@@ -35,7 +35,7 @@ func yourCloudlessFunction() -> []string:
   -- Prepare logging for debugability
   --
 
-  logger = make_logger(false)
+  logger = make_logger(true)
 
   --
   -- Express your compute function
@@ -91,6 +91,7 @@ func yourCloudlessFunction() -> []string:
   -- Second argument is where the function will yield. It's more efficient to do it on HOST_PEER_ID, but can do it on INIT_PEER_ID if you like.
   Console.print(["Execution begins now"])
   errs <- Cloudless_Exec.roundtrip{fn, logger}(dealId, ?[HOST_PEER_ID])
+  --Console.print(["Errors after roundtrip:", errs])
 
   if errs != nil:
     new_errs <- prepend("Errors:", errs)

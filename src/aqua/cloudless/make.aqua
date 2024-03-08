@@ -47,7 +47,9 @@ func prepareHostForTheJob{Logger, Promise}(deal_id: DealId, errors: *Error) -> b
   is_active_opt: *bool
   w_is_active: *bool
   try:
+    Logger.log(["Is worker active?"])
     w_is_active <- WLibW.is_active(deal_id)
+    Logger.log(["Worker is active", w_is_active])
   catch e:
     Logger.log(["Cannot check if worker for the deal is active, error: ", e.message])
     errors <<- e.message
@@ -57,6 +59,7 @@ func prepareHostForTheJob{Logger, Promise}(deal_id: DealId, errors: *Error) -> b
     prev_errors <- Promise.yield()
     if prev_errors != nil:
       pushAll(errors, prev_errors)
+      Logger.log(["Prev errors prevent host from executing a worker"])
       is_active_opt <<- false
     else:
       is_active_opt <<- true
@@ -110,7 +113,7 @@ func simple{Compute, Logger}(yield: Yield) -> Function:
 -- deal_id: subnet to run Compute on
 -- yield: will run on every peer, should determine when there's enough results from different workers
 func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
-  log = Logger.log
+  log = prefixed_log{Logger}("Make.disjoint")
   logger = Logger(log)
 
   errors: *Error
@@ -143,21 +146,28 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
       -- So now we go many times from intermediary peer p to every worker
       -- We cannot do it outside of parseq, as we need access to res.workers without implicit canonicalization
       parseq w <- p_workers on w.host_id:
-        log(["on host", w.host_id])
-        -- Run job only once on every peer
-        if contains(observed_on, w.worker_id!) == false:
-          -- This peer was reached via another peer
-          log(w.worker_id)
-          observed_on <<- w.worker_id!
-          -- Job is initiated only once on every peer
-          host_prepared <- prepareHostForTheJob{logger, Promise.done()}(deal_id, errors)
+        if w.worker_id == nil:
+          log(["Worker is not defined for host", w.host_id, "maybe deal is not funded?"])
+          -- TODO concat strings to show the host id
+          errors <<- "Worker is not defined for host, maybe deal is not funded?"
+        else:  
+          log(["on host", w.host_id])
+          -- Run job only once on every peer
+          if contains(observed_on, w.worker_id!) == false:
+            -- This peer was reached via another peer
+            log(["Worker is", w.worker_id])
+            observed_on <<- w.worker_id!
+            -- Job is initiated only once on every peer
+            host_prepared <- prepareHostForTheJob{logger, Promise.done()}(deal_id, errors)
+            
+            if host_prepared == true:
+              log(["Deal is active, so going go ", w.worker_id!, "via", w.host_id])
+              runComputeJob{logger, Compute, Promise.done()}(w, workers, errors)
+            else:
+              log(["Cannot prepare worker", w.worker_id, "on host", w.host_id])
           
-          if host_prepared == true:
-            log(["Deal is active, so going go ", w.worker_id!, "via", w.host_id])
-            runComputeJob{logger, Compute, Promise.done()}(w, workers, errors)
-         
-        else:
-          log(["Worker was already visited", w.worker_id!])
+          else:
+            log(["Worker was already visited", w.worker_id!])
 
     new_yield = func () -> ?Error:
       log(["New yield"])
@@ -176,7 +186,7 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
 
       join outgoing!
       log(["Joined"])
-      <- nil
+      <- errors
 
     <- Promise(yield = new_yield)
 
