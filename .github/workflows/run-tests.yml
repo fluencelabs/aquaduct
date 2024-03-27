@@ -1,0 +1,41 @@
+name: 'test'
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - '!.github/workflows/tests.yml'
+      - '!.github/workflows/run-tests.yml'
+  push:
+    branches:
+      - 'main'
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - '!.github/workflows/tests.yml'
+      - '!.github/workflows/run-tests.yml'
+
+jobs:
+  check:
+    name: "compile aqua"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          repository: fluencelabs/aquaduct
+          ref: ${{ github.ref }}
+
+      - name: Setup fcli
+        uses: fluencelabs/setup-fluence@v1
+        with:
+          version: main
+
+      - run: fluence dep i
+
+      - run: fluence init --no-input -t minimal
+
+      - name: Check if aqua compiles
+        run: fluence aqua --dry
