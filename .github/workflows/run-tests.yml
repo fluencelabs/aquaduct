@@ -18,7 +18,7 @@ on:
 
 jobs:
   check:
-    name: "Compile Aqua"
+    name: "compile aqua"
     runs-on: ubuntu-latest
 
     steps:
