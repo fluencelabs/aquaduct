@@ -35,5 +35,7 @@ jobs:
 
       - run: fluence dep i
 
+      - run: fluence init --no-input -t minimal
+      
       - name: Check if aqua compiles
         run: fluence aqua --dry
