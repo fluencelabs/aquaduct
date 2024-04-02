@@ -1,0 +1,11 @@
+{
+    "bootstrap-sha": "faa9932a03ae25af91a8a2cfa3bd85a1de487ad5",
+    "release-type": "node",
+    "bump-minor-pre-major": true,
+    "bump-patch-for-minor-pre-major": true,
+    "packages": {
+      "src/aqua": {
+        "component": "aquaduct"
+      }
+    }
+  }
