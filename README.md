@@ -1,11 +1,3 @@
-# Fluence Quickstart Template
+[![npm](https://img.shields.io/npm/v/@fluencelabs/aquaduct)](https://www.npmjs.com/package/@fluencelabs/aquaduct)
 
-## Usage
-
-```sh
-# You can deploy right away with an example worker that contains an example service
-fluence deal deploy
-
-# Run the deployed code
-fluence run -f 'runDeployedServices()'
-```
+# Aduaduct
