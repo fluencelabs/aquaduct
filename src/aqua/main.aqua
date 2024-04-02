@@ -52,7 +52,7 @@ func yourCloudlessFunction() -> []string:
     logger.log(["About to start working"])
     res <- MyService.greeting("Hello from worker")
 
-  -- This closure is to find out whether given worker completed the job.
+  -- This closure is to find out whether given worker completed the job
   -- Like, find worker_id in res stream, join on the result (to trigger waiting)...
   -- Or return errors
   yield = func (w: Worker) -> ?Error:

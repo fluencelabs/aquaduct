@@ -70,9 +70,11 @@ jobs:
           cache: "npm"
 
       - run: npm i
+        working-directory: src/aqua
 
       - name: Publish to npm registry
         run: npm publish --access public --tag unstable
+        working-directory: src/aqua
 
   slack:
     if: always()
