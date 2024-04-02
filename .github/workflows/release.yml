@@ -18,9 +18,6 @@ jobs:
     outputs:
       releases-created: ${{ steps.release.outputs.releases_created }}
 
-      fluence-cli-release-created: ${{ steps.release.outputs['release_created'] }}
-      fluence-cli-tag-name: ${{ steps.release.outputs['tag_name'] }}
-
     steps:
       - name: Run release-please
         id: release
@@ -38,7 +35,7 @@ jobs:
         run: echo "${RELEASE_PLEASE_OUTPUT}" | jq
 
   aquaduct:
-    if: needs.release-please.outputs.fluence-cli-release-created
+    if: needs.release-please.outputs.releases-created
     runs-on: ubuntu-latest
     needs:
       - release-please
@@ -65,10 +62,11 @@ jobs:
             kv/npmjs/fluencebot token | NODE_AUTH_TOKEN
 
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: "16"
+          node-version: "18"
           registry-url: "https://registry.npmjs.org"
+          cache-dependency-path: "src/aqua/package.json"
           cache: "npm"
 
       - run: npm i
