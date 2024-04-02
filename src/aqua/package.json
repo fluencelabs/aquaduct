@@ -1,0 +1,25 @@
+{
+  "name": "aquaduct",
+  "version": "0.0.0",
+  "description": "",
+  "files": [
+    "*.aqua",
+    "cloudless/*.aqua"
+  ],
+  "dependencies": {
+    "@fluencelabs/aqua-lib": "0.9.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fluencelabs/aquaduct.git"
+  },
+  "author": "Fluence Labs",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fluencelabs/aquaduct/issues"
+  },
+  "homepage": "https://github.com/fluencelabs/aquaduct#readme"
+}
