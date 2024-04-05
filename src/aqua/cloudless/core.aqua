@@ -1,6 +1,6 @@
 aqua Cloudless_Core declares *
 
-import Error from "../promise"
+import Error, Promise, timeout from "../promise"
 import Job, j_timeout from "../job"
 -- use timeout from "job" as Job
 
@@ -8,7 +8,13 @@ alias DealId : string
 
 -- Cloudless Function runs Compute on a single Subnet – with the given execution policy
 ability Function:
-  run(dealId: DealId) -> Job
+  run(dealId: DealId, prev: Promise) -> Promise
+
+-- Should be a function in Function
+func run_job{Function}(dealId: DealId) -> Job:
+  run = (prev: Promise) -> Promise:
+    <- Function.run(dealId, prev)
+  <- Job(run)  
 
 --
 -- DECORATORS
@@ -18,8 +24,8 @@ ability Function:
 -- Checked on yield phase
 -- TODO should be just timeout, but imports work poorly
 func ct_timeout{Function}(waitForMs: u64, errorMessage: Error) -> Function:
-  run = func(dealId: DealId) -> Job:
-    j <- Function.run(dealId)
-    <- j_timeout{j}(waitForMs, errorMessage)
+  run = func(dealId: DealId, prev: Promise) -> Promise:
+    j <- Function.run(dealId, prev)
+    <- timeout{j}(waitForMs, errorMessage)
 
   <- Function(run = run)

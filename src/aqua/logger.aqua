@@ -5,6 +5,20 @@ import Console from "@fluencelabs/aqua-lib/builtin.aqua"
 ability Logger:
   log(msgs: []⊤)
 
+func prefixed{Logger}(prefix: string) -> Logger:
+  log = func(msg: []⊤):
+    newMsg: *⊤
+    newMsg <<- prefix
+    for m <- msg:
+      newMsg <<- m
+    Logger.log(newMsg)
+
+  <- Logger(log)
+
+func prefixed_log{Logger}(prefix: string) -> ([]⊤ -> ()):
+  logger = prefixed{Logger}(prefix)
+  <- logger.log
+
 func local(enabled: bool) -> Logger:
   -- Use these snippets for logging, pass log function as an argument.
   -- If you have more contextual data, pass it as ability properties.

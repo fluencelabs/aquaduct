@@ -1,6 +1,6 @@
-aqua Cloudless_Make declares *
+aqua Cloudless_Make declares simple, disjoint
 
-import PeerId from "@fluencelabs/aqua-lib/builtin.aqua"
+import PeerId, Op from "@fluencelabs/aqua-lib/builtin.aqua"
 import Subnet, Worker from "@fluencelabs/aqua-lib/subnet.aqua"
 import Worker as WLibW from "@fluencelabs/aqua-lib/workers.aqua"
 import pushAll, optOr, contains from "../utils"
@@ -12,11 +12,12 @@ import Job, j_timeout from "../job"
 use done from "../promise" as Promise
 import Compute from "../compute"
 import Yield from "yield"
-import Logger from "../logger"
+import Logger, prefixed_log from "../logger"
 
+-- Helper: resolves a subnet, handles errors
 func resolveSubnet{Logger}(deal_id: DealId, errors: *Error) -> []Worker:
   subnet <- Subnet.resolve(deal_id)
-  Logger.log(["Subnet resolved to:", subnet])
+  Logger.log(["resolveSubnet", "subnet=", subnet])
   workers: *Worker
   if subnet.success == false:
     Logger.log(["Subnet resolve failed"])
@@ -27,56 +28,84 @@ func resolveSubnet{Logger}(deal_id: DealId, errors: *Error) -> []Worker:
       workers <<- w
   <- workers
 
-func simple{Compute, Logger}(coordinator: ?PeerId, yield: Yield) -> Function:
-  log = Logger.log
+-- Helper: runs a compute job, pushes to workers on success, to errors on error
+func runComputeJob{Logger, Compute, Promise}(w: Worker, workers: *Worker, errors: *Error):
+  on w.worker_id! via w.host_id:
+    log = Logger.log
+    job <- Compute.job(w)
+    log(["got compute job on", w.worker_id!])
+    try:
+      job.run(Promise)
+      log(["Going to add a worker to done workers"])
+      workers <<- w
+    catch e:
+      log(["Compute job errored on", w.worker_id!, "message:", e.message])
+      errors <<- e.message
 
-  deal_run = func (deal_id: DealId) -> Job:
-    ok: *string
-    -- TODO errors: %Error
-    errors: *Error
+-- Helper: checks if worker is active && yields previous promise on the host
+func prepareHostForTheJob{Logger, Promise}(deal_id: DealId, errors: *Error) -> bool:
+  is_active_opt: *bool
+  w_is_active: *bool
+  try:
+    Logger.log(["Is worker active?"])
+    w_is_active <- WLibW.is_active(deal_id)
+    Logger.log(["Worker is active", w_is_active])
+  catch e:
+    Logger.log(["Cannot check if worker for the deal is active, error: ", e.message])
+    errors <<- e.message
+    w_is_active <<- false
 
-    run = func (promise: Promise) -> Promise:
-      -- moves :(
-      host <- optOr(coordinator, HOST_PEER_ID)
+  if w_is_active! == true:
+    prev_errors <- Promise.yield()
+    if prev_errors != nil:
+      pushAll(errors, prev_errors)
+      Logger.log(["Prev errors prevent host from executing a worker"])
+      is_active_opt <<- false
+    else:
+      is_active_opt <<- true
+  else:
+    Logger.log(["Deal is inactive on the host, have you deposited enough funds?"])
+    errors <<- "Deal is not active, worker is not created or not available"
+    is_active_opt <<- false   
 
-      workers: *Worker
-      on host:
-        for w <- resolveSubnet{Logger}(deal_id, errors) par:
-          on w.host_id:
-            is_active_opt: *bool
-            try:
-              is_active_opt <- WLibW.is_active(deal_id)
-            catch e:
-              errors <<- e.message
-              is_active_opt <<- false
+  <- is_active_opt!  
 
-            is_active = is_active_opt!
-            log(["Hello guys!", is_active])
-            if is_active == false:
-              log(["Deal is inactive on this host, have you deposited enough funds?", w.host_id])
-              errors <<- "Deal is not active, worker is not created or not available"
-            else:
-              log(["Deal is active, okay"])
+-- Executor must make sure that job is running on a host
+-- Due to compiler bugs, this function must be created and used in one sequential block
+func simple{Compute, Logger}(yield: Yield) -> Function:
+  log = prefixed_log{Logger}("Make.simple")
+  logger = Logger(log)
 
-              log(["Going go ", w.worker_id!, "via", w.host_id])
-              par on w.worker_id! via w.host_id:
-                job <- Compute.job(w)
-                log(["got compute job on", w.worker_id!])
-                try:
-                  job.run(promise)
-                  workers <<- w
-                catch e:
-                  log(["Compute job errored on", w.worker_id!, "message:", e.message])
-                  errors <<- e.message
+  -- TODO these declarations must be inside `run`, but there's a bug about that
+  -- So it is not a builder of a Function now! You can do it only once!
 
-      new_yield = func () -> ?Error:
-        y <- yield(workers, errors)
-        new_errs <- y.yield()
-        <- new_errs
-      <- Promise(yield = new_yield)
+  -- TODO errors: %Error
+  errors: *Error
 
-    <- Job(run = run)
-  <- Function(run = deal_run)
+  workers: *Worker
+
+  run = func (deal_id: DealId, prev: Promise) -> Promise:
+    subn <- resolveSubnet{Logger}(deal_id, errors)
+    log(["Subnet is resolved", subn])       
+    parseq w <- subn on w.host_id:
+      host_prepared <- prepareHostForTheJob{logger, prev}(deal_id, errors)
+      
+      if host_prepared == true:
+        log(["Deal is active, so going go ", w.worker_id!, "via", w.host_id])
+        runComputeJob{logger, Compute, Promise.done()}(w, workers, errors)
+
+    c_yield = func (w: Worker) -> ?Error:
+      <- Compute.yield(w)
+
+    new_yield = func () -> ?Error:
+      log(["Running new yield"])
+      y <- yield(workers, errors, c_yield)
+      new_errs <- y.yield()
+      log(["Yielded new errors", new_errs])
+      <- new_errs
+    <- Promise(yield = new_yield)
+
+  <- Function(run = run)      
 
 -- Compute: will be triggered on every worker that could be reached.
 --        If subnet-scale coordination is needed, Compute must conduct it
@@ -84,7 +113,8 @@ func simple{Compute, Logger}(coordinator: ?PeerId, yield: Yield) -> Function:
 -- deal_id: subnet to run Compute on
 -- yield: will run on every peer, should determine when there's enough results from different workers
 func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
-  log = Logger.log
+  log = prefixed_log{Logger}("Make.disjoint")
+  logger = Logger(log)
 
   errors: *Error
 
@@ -99,66 +129,65 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
   -- Internal: mutex to run job on every peer only once
   observed_on: *PeerId
 
-  deal_run = func (deal_id: DealId) -> Job:
+  run = func (deal_id: DealId, prev: Promise) -> Promise:
+    parseq p <- peers on p:
+      -- Yield previous job on different peers
+      -- TODO should we yield it on workers instead? I think we don't
+      prev_err <- prev.yield()
+      pushAll(errors, prev_err)
 
-    run = func (promise: Promise) -> Promise:
-      parseq p <- peers on p:
-        -- Yield previous job on different peers
-        -- TODO should we yield it on workers instead? I think we don't
-        prev_err <- promise.yield()
-        pushAll(errors, prev_err)
+      -- Independent resolve on every peer -- triggers moving to p
+      p_workers <- resolveSubnet{Logger}(deal_id, errors)
 
-        -- Independent resolve on every peer -- triggers moving to p
-        p_workers <- resolveSubnet{Logger}(deal_id, errors)
+      -- Remember the peer: it should be the first local write to ingoing
+      ingoing <<- p
 
-        -- Remember the peer: it should be the first local write to ingoing
-        ingoing <<- p
-
-        -- TODO: handle failures, e.g. with timeouts?
-        -- So now we go many times from intermediary peer p to every worker
-        -- We cannot do it outside of parseq, as we need access to res.workers without implicit canonicalization
-        parseq w <- p_workers on w.host_id:
+      -- TODO: handle failures, e.g. with timeouts?
+      -- So now we go many times from intermediary peer p to every worker
+      -- We cannot do it outside of parseq, as we need access to res.workers without implicit canonicalization
+      parseq w <- p_workers on w.host_id:
+        if w.worker_id == nil:
+          log(["Worker is not defined for host", w.host_id, "maybe deal is not funded?"])
+          -- TODO concat strings to show the host id
+          errors <<- "Worker is not defined for host, maybe deal is not funded?"
+        else:  
           log(["on host", w.host_id])
           -- Run job only once on every peer
           if contains(observed_on, w.worker_id!) == false:
-              -- This peer was reached via another peer
-              log(w.worker_id)
-              observed_on <<- w.worker_id!
-              -- Job is initiated only once on every peer
-              log([w.worker_id!, "Get Compute.job"])
-              job <- Compute.job(w)
-              log([w.worker_id!, "Job planned"])
-
-              -- Cannot use the value :( but do run the job
-              pr <- job.run(Promise.done())
-              log([w.worker_id!, "Got a Promise"])
-
-              -- TODO: temporary shit
-              z <- pr.yield()
-              log([w.worker_id!, "Promise yielded"])
-              log(z)
-
-              -- Workers is a stream of workers that have the job triggered/scheduled
-              workers <<- w
+            -- This peer was reached via another peer
+            log(["Worker is", w.worker_id])
+            observed_on <<- w.worker_id!
+            -- Job is initiated only once on every peer
+            host_prepared <- prepareHostForTheJob{logger, Promise.done()}(deal_id, errors)
+            
+            if host_prepared == true:
+              log(["Deal is active, so going go ", w.worker_id!, "via", w.host_id])
+              runComputeJob{logger, Compute, Promise.done()}(w, workers, errors)
+            else:
+              log(["Cannot prepare worker", w.worker_id, "on host", w.host_id])
+          
           else:
             log(["Worker was already visited", w.worker_id!])
 
+    new_yield = func () -> ?Error:
+      log(["New yield"])
+      -- TODO: should it be the same peers? why?
       parseq p <- peers on p:
         -- Independently, need to wait for the required number of workers to succeed before proceeding
-        y <- yield(workers, errors)
+        c_yield = func (w: Worker) -> ?Error:
+          <- Compute.yield(w)
+        log(["About to yield on parseq disjoint peer", p])  
+        y <- yield(workers, errors, c_yield)
         pushAll(errors, y.yield())
-        log(["Yielded on workers", p])
+        log(["Yielded on parseq disjoint peer", p])
         -- fastest ingoing, this outgoing
         outgoing <<- [ingoing!, p]
-
-      new_yield = func () -> ?Error:
         -- This is the fastest path, but we have no place to keep it
-        log(["New yield"])
-        join outgoing!
-        log(["Joined"])
-        <- nil
 
-      <- Promise(yield = new_yield)
+      join outgoing!
+      log(["Joined"])
+      <- errors
 
-    <- Job(run = run)
-  <- Function(run = deal_run)
+    <- Promise(yield = new_yield)
+
+  <- Function(run)
