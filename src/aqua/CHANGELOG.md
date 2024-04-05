@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.2](https://github.com/fluencelabs/aquaduct/compare/aquaduct-v0.0.1...aquaduct-v0.0.2) (2024-04-05)
+
+
+### Features
+
+* Consider the results of worker job ([#5](https://github.com/fluencelabs/aquaduct/issues/5)) ([98389a9](https://github.com/fluencelabs/aquaduct/commit/98389a9db0bc293ca1082fe47ec6982bafae8738))
+
 ## 0.0.1 (2024-04-02)
 
 
