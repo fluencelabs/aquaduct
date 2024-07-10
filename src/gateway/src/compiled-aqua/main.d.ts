@@ -4,7 +4,7 @@
  *
  * This file is generated using:
  * @fluencelabs/aqua-api version: 0.13.0
- * @fluencelabs/aqua-to-js version: 0.3.5
+ * @fluencelabs/aqua-to-js version: 0.3.13
  * If you find any bugs in generated AIR, please write an issue on GitHub: https://github.com/fluencelabs/aqua/issues
  * If you find any bugs in generated JS/TS, please write an issue on GitHub: https://github.com/fluencelabs/js-client/issues
  *
@@ -19,7 +19,7 @@ import {
 
 
 // Functions
-export type YourCloudlessFunctionParams = [config?: {ttl?: number}] | [peer: IFluenceClient$$, config?: {ttl?: number}];
+export type CloudlessParams = [config?: {ttl?: number}] | [peer: IFluenceClient$$, config?: {ttl?: number}];
 
-export type YourCloudlessFunctionResult = Promise<string[]>;
+export type CloudlessResult = Promise<string[]>;
 

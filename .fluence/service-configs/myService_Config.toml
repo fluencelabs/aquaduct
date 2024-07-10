@@ -1,0 +1,12 @@
+total_memory_limit = "2GB"
+
+[[module]]
+name = "myService"
+load_from = "/Users/office/IdeaProjects/aqueduct/target/wasm32-wasi/release/myService.wasm"
+
+[module.wasi.mapped_dirs]
+"/tmp" = "/Users/office/IdeaProjects/aqueduct/.fluence/tmp/volumes/services/myService/service/tmp"
+"/storage" = "/Users/office/IdeaProjects/aqueduct/.fluence/tmp/volumes/services/myService/service/storage"
+"/tmp/module" = "/Users/office/IdeaProjects/aqueduct/.fluence/tmp/volumes/services/myService/modules/myService/tmp/module"
+"/storage/module" = "/Users/office/IdeaProjects/aqueduct/.fluence/tmp/volumes/services/myService/modules/myService/storage/module"
+"/tmp/vault" = "/Users/office/IdeaProjects/aqueduct/.fluence/tmp/volumes/particles"
