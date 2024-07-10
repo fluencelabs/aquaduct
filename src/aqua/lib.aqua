@@ -1,4 +1,4 @@
-aqua Aqueduct declares *
+aqua Aquaduct declares *
 
 import Promise from "promise"
 use "cloudless/exec"
