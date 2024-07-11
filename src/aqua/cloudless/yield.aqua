@@ -30,7 +30,7 @@ func wait_for{Logger}(success: u8, error: u8) -> Yield:
         if e == nil:
           ok <<- true
         else:  
-          pushAllToMap(err, e, w.worker_id!)
+          pushAllToKey(err, e, w.worker_id!)
 
       -- TODO not absolutely correct:
       -- ignores errors that happen BEFORE we can reach workers
