@@ -23,6 +23,21 @@ func pushAll(stream: *string, add: []string):
   for a <- add:
     stream <<- a
 
+-- add is a scalar, so no canonicalization happens, no move
+func pushAllToKey(map: %string, add: []string, key: string):
+  for a <- add:
+    map <<- key, a  
+
+func pushAllToMap(map: %string, push: %string):
+  for k, v <- push:
+    map <<- k, v     
+
+-- Should not canonicalize, but not checked
+func mapToStream(map: %string, stream: *string):
+  for k <- map.keysStream() rec:
+    for v <- map.getStream(k) rec:
+      stream <<- v
+
 -- moves, as returns array
 func prepend(prefix: string, stream: []string) -> []string:
   new_stream = *[prefix]

@@ -2,11 +2,11 @@ aqua Cloudless_Yield declares *
 
 import Worker from "@fluencelabs/aqua-lib/subnet.aqua"
 import Promise, Error from "../promise"
-import pushAll from "../utils"
+import pushAll, pushAllToMap, mapToStream from "../utils"
 import Logger, prefixed from "../logger"
 
 alias WorkerYield: Worker -> ?Error
-alias Yield: *Worker, *Error, WorkerYield -> Promise
+alias Yield: *Worker, %Error, WorkerYield -> Promise
 
 --
 -- Strategies for Cloudless Functions
@@ -17,7 +17,7 @@ func wait_for{Logger}(success: u8, error: u8) -> Yield:
   l2 = prefixed{Logger}("Yield.wait_for")
   log = l2.log
 
-  wait = func (ws: *Worker, err: *Error, cb: Worker -> ?Error) -> Promise:
+  wait = func (ws: *Worker, err: %Error, cb: Worker -> ?Error) -> Promise:
     yield = func () -> ?Error:
       ok: *bool
       log(["is called"])
@@ -30,7 +30,7 @@ func wait_for{Logger}(success: u8, error: u8) -> Yield:
         if e == nil:
           ok <<- true
         else:  
-          pushAll(err, e)
+          pushAllToMap(err, e, w.worker_id!)
 
       -- TODO not absolutely correct:
       -- ignores errors that happen BEFORE we can reach workers
@@ -41,8 +41,8 @@ func wait_for{Logger}(success: u8, error: u8) -> Yield:
       log(["Joined", err, err.length, error])
 
       new_error: *Error
-      if err.length >= error:
-        pushAll(new_error, err)
+      if err.getKeys().length >= error:
+        mapToStream(err, new_error)
         --log(["Finally, errored!", new_error])
 
       <- new_error
