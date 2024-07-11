@@ -11,10 +11,8 @@ import Job, j_timeout from "../job"
 -- use timeout from "job" as Job
 use done from "../promise" as Promise
 import Compute from "../compute"
-import Yield from "yield"
+import Yield, FATAL from "yield"
 import Logger, prefixed_log from "../logger"
-
-const FATAL = "fatal"
 
 -- Helper: resolves a subnet, handles errors
 func resolveSubnet{Logger}(deal_id: DealId, errors: %Error) -> []Worker:
@@ -175,13 +173,15 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
     new_yield = func () -> ?Error:
       log(["New yield"])
       -- TODO: should it be the same peers? why?
+      -- TODO: new errors is a stream that's filled new time on every join peer
+      new_errors: *Error
       parseq p <- peers on p:
         -- Independently, need to wait for the required number of workers to succeed before proceeding
         c_yield = func (w: Worker) -> ?Error:
           <- Compute.yield(w)
         log(["About to yield on parseq disjoint peer", p])  
         y <- yield(workers, errors, c_yield)
-        pushAll(errors, y.yield())
+        pushAll(new_errors, y.yield())
         log(["Yielded on parseq disjoint peer", p])
         -- fastest ingoing, this outgoing
         outgoing <<- [ingoing!, p]
@@ -189,7 +189,7 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
 
       join outgoing!
       log(["Joined"])
-      <- errors
+      <- new_errors
 
     <- Promise(yield = new_yield)
 
