@@ -1,4 +1,4 @@
-aqua Cloudless_Exec declares *
+aqua Cloudless.Exec declares *
 
 import optOr from "../utils"
 import Logger from "../logger"

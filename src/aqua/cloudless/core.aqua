@@ -1,4 +1,4 @@
-aqua Cloudless_Core declares *
+aqua Cloudless.Core declares *
 
 import Error, Promise, timeout from "../promise"
 import Job, j_timeout from "../job"

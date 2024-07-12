@@ -44,10 +44,44 @@ export const cloudless_script = `
                      (seq
                       (seq
                        (seq
-                        (call %init_peer_id% ("getDataSrv" "-relay-") [] -relay-)
+                        (seq
+                         (call %init_peer_id% ("getDataSrv" "-relay-") [] -relay-)
+                         (new $option-inline
+                          (seq
+                           (xor
+                            (seq
+                             (new %MyDeployment_obj_map
+                              (seq
+                               (seq
+                                (seq
+                                 (seq
+                                  (seq
+                                   (seq
+                                    (ap ("chainNetworkId" 31337) %MyDeployment_obj_map)
+                                    (ap ("dealId" "ce85503de9399d4deca3c0b2bb3e9e7cfcbf9c6b") %MyDeployment_obj_map)
+                                   )
+                                   (ap ("dealIdOriginal" "0xCe85503De9399D4dECa3c0b2bb3e9e7CFCBf9C6B") %MyDeployment_obj_map)
+                                  )
+                                  (ap ("definition" "bafkreia4jwfajw6wqwnwuy7nnfk2m3hqvxradgn2wgt7srkc43ssp7irsq") %MyDeployment_obj_map)
+                                 )
+                                 (ap ("matched" true) %MyDeployment_obj_map)
+                                )
+                                (ap ("timestamp" "2024-07-10T12:58:48.944Z") %MyDeployment_obj_map)
+                               )
+                               (canon %init_peer_id% %MyDeployment_obj_map  MyDeployment_obj)
+                              )
+                             )
+                             (ap MyDeployment_obj $option-inline)
+                            )
+                            (null)
+                           )
+                           (canon %init_peer_id% $option-inline  #$option-inline-0)
+                          )
+                         )
+                        )
                         (new %Deals_obj_map
                          (seq
-                          (ap ("myDeployment" []) %Deals_obj_map)
+                          (ap ("myDeployment" #$option-inline-0) %Deals_obj_map)
                           (canon %init_peer_id% %Deals_obj_map  Deals_obj)
                          )
                         )
@@ -72,13 +106,13 @@ export const cloudless_script = `
                    )
                    (call %init_peer_id% ("run-console" "print") [#$array-inline-1-0])
                   )
-                  (new $option-inline
+                  (new $option-inline-1
                    (seq
                     (xor
-                     (ap -relay- $option-inline)
+                     (ap -relay- $option-inline-1)
                      (null)
                     )
-                    (canon %init_peer_id% $option-inline  #$option-inline-0)
+                    (canon %init_peer_id% $option-inline-1  #$option-inline-1-0)
                    )
                   )
                  )
@@ -86,14 +120,14 @@ export const cloudless_script = `
                   (new -else-error-
                    (new -if-error-
                     (xor
-                     (match #$option-inline-0 []
+                     (match #$option-inline-1-0 []
                       (ap -relay- $res-0)
                      )
                      (seq
                       (ap :error: -if-error-)
                       (xor
                        (match :error:.$.error_code 10001
-                        (ap #$option-inline-0.$.[0] $res-0)
+                        (ap #$option-inline-1-0.$.[0] $res-0)
                        )
                        (seq
                         (seq
@@ -655,9 +689,9 @@ export const cloudless_script = `
                                                                            (seq
                                                                             (seq
                                                                              (ap "Worker is active" $array-inline-9)
-                                                                             (canon w-1.$.host_id $w_is_active  #$push-to-stream-354)
+                                                                             (canon w-1.$.host_id $w_is_active  #$push-to-stream-370)
                                                                             )
-                                                                            (ap #$push-to-stream-354 $array-inline-9)
+                                                                            (ap #$push-to-stream-370 $array-inline-9)
                                                                            )
                                                                            (canon w-1.$.host_id $array-inline-9  #$array-inline-9-0)
                                                                           )
@@ -2168,9 +2202,9 @@ export const cloudless_script = `
                                                              (seq
                                                               (seq
                                                                (ap "Joined" $array-inline-27)
-                                                               (canon p-2-0 $errors  #$push-to-stream-1043)
+                                                               (canon p-2-0 $errors  #$push-to-stream-1059)
                                                               )
-                                                              (ap #$push-to-stream-1043 $array-inline-27)
+                                                              (ap #$push-to-stream-1059 $array-inline-27)
                                                              )
                                                              (canon p-2-0 $errors  #$errors_to_functor)
                                                             )

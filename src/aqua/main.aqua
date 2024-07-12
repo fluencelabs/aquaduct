@@ -14,7 +14,7 @@ use "cloudless/yield"
 use "compute"
 import Error from "promise"
 import local as make_logger, prefixed_log from "logger"
-import prepend from "utils"
+import prepend, mapToStream from "utils"
 
 
 -- DOCUMENTATION:
@@ -23,8 +23,10 @@ import prepend from "utils"
 
 export cloudless
 
+alias Result: string
+
 -- Mind the return type: it could be different
-func cloudless() -> []string:
+func cloudless() -> []Error, []Result:
   --
   -- Read deal info from configuration – need to deploy first
   --
@@ -43,7 +45,7 @@ func cloudless() -> []string:
 
   -- Append-only accumulator of results that all our subnet workers will write to.
   -- Not necessarily a string.
-  res: *string
+  res: %Result
 
   -- Inside this closure, express what should happen on your worker (that's given as an argument).
   -- All your services are available here. And builtin ones.
@@ -54,7 +56,7 @@ func cloudless() -> []string:
     wlog([w.worker_id!, "About to start working"])
     r <- MyService.greeting("-works-ok-")
     wlog([w.worker_id!, "MyService.greeting", r])
-    res <<- r
+    res <<- w.worker_id!, r
         
 
   -- This closure is to find out whether given worker completed the job
@@ -62,8 +64,8 @@ func cloudless() -> []string:
   -- Or return errors
   yield = func (w: Worker) -> ?Error:
     logger.log(["W.yield", w.worker_id!, "About to join res!"])
-    join res!
-    -- TODO: find this worker in res...
+    w_res = res.getStream(w.worker_id!)
+    join w_res!
     <- nil
 
   -- Finally, build your compute function from start and yield closures
@@ -77,9 +79,9 @@ func cloudless() -> []string:
   -- Simple and disjoint both call function on all workers in parallel.
   -- Disjoint can be used to protect from censoring your subnet by getting to subnet workers through disjoint paths.
   -- Simple resolves the subnet on a single given peer, or, if omitted, on the relay.
-  -- Cloudless_Yield.wait_for_k will wait for this number of responses before considering success.
-  --fn = Cloudless_Make.simple{comp, logger}(Cloudless_Yield.wait_for{logger}(2, 1))
-  fn = Cloudless_Make.disjoint{comp, logger}([HOST_PEER_ID], Cloudless_Yield.wait_for{logger}(1, 1))
+  -- Cloudless.Yield.wait_for_k will wait for this number of responses before considering success.
+  --fn = Cloudless.Make.simple{comp, logger}(Cloudless.Yield.wait_for{logger}(2, 1))
+  fn = Cloudless.Make.disjoint{comp, logger}([HOST_PEER_ID], Cloudless.Yield.wait_for{logger}(2, 1))
 
   --
   -- Execute Cloud Function
@@ -90,7 +92,9 @@ func cloudless() -> []string:
   -- First argument is your deal id to resolve the deployed subnet.
   -- Second argument is where the function will yield. It's more efficient to do it on HOST_PEER_ID, but can do it on INIT_PEER_ID if you like.
   Console.print(["Execution begins now"])
-  errs <- Cloudless_Exec.roundtrip{fn, logger}(dealId, ?[HOST_PEER_ID])
+  errs <- Cloudless.Exec.roundtrip{fn, logger}(dealId, ?[HOST_PEER_ID])
+  --Cloudless.Exec.fireAndForget{fn}(dealId)
+  --errs = nil
   --Console.print(["Errors after roundtrip:", errs])
 
   if errs != nil:
@@ -98,5 +102,6 @@ func cloudless() -> []string:
     Console.print(new_errs)
 
   -- Results are collected into your res variable. Now it should be ready to use, filled with values.
-  -- Please note that errors handling is ignored in this example, which may hurt in the real life.
-  <- res
+  res_stream: *Result
+  mapToStream(res, res_stream)
+  <- errs, res_stream

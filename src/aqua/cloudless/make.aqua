@@ -1,9 +1,9 @@
-aqua Cloudless_Make declares simple, disjoint
+aqua Cloudless.Make declares simple, disjoint
 
 import PeerId, Op from "@fluencelabs/aqua-lib/builtin.aqua"
 import Subnet, Worker from "@fluencelabs/aqua-lib/subnet.aqua"
 import Worker as WLibW from "@fluencelabs/aqua-lib/workers.aqua"
-import pushAll, optOr, contains from "../utils"
+import pushAll, optOr, contains, appendToMapKey from "../utils"
 import Function, DealId from "core"
 
 import Error, Promise from "../promise"
@@ -11,17 +11,17 @@ import Job, j_timeout from "../job"
 -- use timeout from "job" as Job
 use done from "../promise" as Promise
 import Compute from "../compute"
-import Yield from "yield"
+import Yield, FATAL from "yield"
 import Logger, prefixed_log from "../logger"
 
 -- Helper: resolves a subnet, handles errors
-func resolveSubnet{Logger}(deal_id: DealId, errors: *Error) -> []Worker:
+func resolveSubnet{Logger}(deal_id: DealId, errors: %Error) -> []Worker:
   subnet <- Subnet.resolve(deal_id)
   Logger.log(["resolveSubnet", "subnet=", subnet])
   workers: *Worker
   if subnet.success == false:
     Logger.log(["Subnet resolve failed"])
-    errors <<- "Subnet resolve failed"
+    errors <<- FATAL, "Subnet resolve failed"
   else:
     -- cannot use pushAll as it's typed with string
     for w <- subnet.workers:
@@ -29,7 +29,7 @@ func resolveSubnet{Logger}(deal_id: DealId, errors: *Error) -> []Worker:
   <- workers
 
 -- Helper: runs a compute job, pushes to workers on success, to errors on error
-func runComputeJob{Logger, Compute, Promise}(w: Worker, workers: *Worker, errors: *Error):
+func runComputeJob{Logger, Compute, Promise}(w: Worker, workers: *Worker, errors: %Error):
   on w.worker_id! via w.host_id:
     log = Logger.log
     job <- Compute.job(w)
@@ -40,10 +40,10 @@ func runComputeJob{Logger, Compute, Promise}(w: Worker, workers: *Worker, errors
       workers <<- w
     catch e:
       log(["Compute job errored on", w.worker_id!, "message:", e.message])
-      errors <<- e.message
+      errors <<- w.worker_id!, e.message
 
 -- Helper: checks if worker is active && yields previous promise on the host
-func prepareHostForTheJob{Logger, Promise}(deal_id: DealId, errors: *Error) -> bool:
+func prepareHostForTheJob{Logger, Promise}(deal_id: DealId, errors: %Error, pid: string) -> bool:
   is_active_opt: *bool
   w_is_active: *bool
   try:
@@ -52,20 +52,20 @@ func prepareHostForTheJob{Logger, Promise}(deal_id: DealId, errors: *Error) -> b
     Logger.log(["Worker is active", w_is_active])
   catch e:
     Logger.log(["Cannot check if worker for the deal is active, error: ", e.message])
-    errors <<- e.message
+    errors <<- pid, e.message
     w_is_active <<- false
 
   if w_is_active! == true:
     prev_errors <- Promise.yield()
     if prev_errors != nil:
-      pushAll(errors, prev_errors)
+      appendToMapKey(errors, prev_errors, pid)
       Logger.log(["Prev errors prevent host from executing a worker"])
       is_active_opt <<- false
     else:
       is_active_opt <<- true
   else:
     Logger.log(["Deal is inactive on the host, have you deposited enough funds?"])
-    errors <<- "Deal is not active, worker is not created or not available"
+    errors <<- pid, "Deal is not active, worker is not created or not available"
     is_active_opt <<- false   
 
   <- is_active_opt!  
@@ -80,7 +80,7 @@ func simple{Compute, Logger}(yield: Yield) -> Function:
   -- So it is not a builder of a Function now! You can do it only once!
 
   -- TODO errors: %Error
-  errors: *Error
+  errors: %Error
 
   workers: *Worker
 
@@ -88,7 +88,7 @@ func simple{Compute, Logger}(yield: Yield) -> Function:
     subn <- resolveSubnet{Logger}(deal_id, errors)
     log(["Subnet is resolved", subn])       
     parseq w <- subn on w.host_id:
-      host_prepared <- prepareHostForTheJob{logger, prev}(deal_id, errors)
+      host_prepared <- prepareHostForTheJob{logger, prev}(deal_id, errors, optOr(w.worker_id, w.host_id))
       
       if host_prepared == true:
         log(["Deal is active, so going go ", w.worker_id!, "via", w.host_id])
@@ -116,7 +116,7 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
   log = prefixed_log{Logger}("Make.disjoint")
   logger = Logger(log)
 
-  errors: *Error
+  errors: %Error
 
   -- Path to worker
   ingoing: *PeerId
@@ -134,7 +134,8 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
       -- Yield previous job on different peers
       -- TODO should we yield it on workers instead? I think we don't
       prev_err <- prev.yield()
-      pushAll(errors, prev_err)
+      -- TODO should it be non-fatal?
+      appendToMapKey(errors, prev_err, FATAL)
 
       -- Independent resolve on every peer -- triggers moving to p
       p_workers <- resolveSubnet{Logger}(deal_id, errors)
@@ -149,7 +150,7 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
         if w.worker_id == nil:
           log(["Worker is not defined for host", w.host_id, "maybe deal is not funded?"])
           -- TODO concat strings to show the host id
-          errors <<- "Worker is not defined for host, maybe deal is not funded?"
+          errors <<- w.host_id, "Worker is not defined for host, maybe deal is not funded?"
         else:  
           log(["on host", w.host_id])
           -- Run job only once on every peer
@@ -158,7 +159,7 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
             log(["Worker is", w.worker_id])
             observed_on <<- w.worker_id!
             -- Job is initiated only once on every peer
-            host_prepared <- prepareHostForTheJob{logger, Promise.done()}(deal_id, errors)
+            host_prepared <- prepareHostForTheJob{logger, Promise.done()}(deal_id, errors, optOr(w.worker_id, w.host_id))
             
             if host_prepared == true:
               log(["Deal is active, so going go ", w.worker_id!, "via", w.host_id])
@@ -172,13 +173,15 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
     new_yield = func () -> ?Error:
       log(["New yield"])
       -- TODO: should it be the same peers? why?
+      -- TODO: new errors is a stream that's filled new time on every join peer
+      new_errors: *Error
       parseq p <- peers on p:
         -- Independently, need to wait for the required number of workers to succeed before proceeding
         c_yield = func (w: Worker) -> ?Error:
           <- Compute.yield(w)
         log(["About to yield on parseq disjoint peer", p])  
         y <- yield(workers, errors, c_yield)
-        pushAll(errors, y.yield())
+        pushAll(new_errors, y.yield())
         log(["Yielded on parseq disjoint peer", p])
         -- fastest ingoing, this outgoing
         outgoing <<- [ingoing!, p]
@@ -186,7 +189,7 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
 
       join outgoing!
       log(["Joined"])
-      <- errors
+      <- new_errors
 
     <- Promise(yield = new_yield)
 

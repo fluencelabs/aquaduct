@@ -1,23 +1,25 @@
-aqua Cloudless_Yield declares *
+aqua Cloudless.Yield declares *
 
 import Worker from "@fluencelabs/aqua-lib/subnet.aqua"
 import Promise, Error from "../promise"
-import pushAll from "../utils"
+import pushAll, appendToMapKey, mapToStream from "../utils"
 import Logger, prefixed from "../logger"
 
 alias WorkerYield: Worker -> ?Error
-alias Yield: *Worker, *Error, WorkerYield -> Promise
+alias Yield: *Worker, %Error, WorkerYield -> Promise
 
 --
--- Strategies for Cloudless Functions
+-- Yielding Strategies for Cloudless Functions – distinguishing success state from error state
 --
+
+const FATAL = "fatal"
 
 -- Wait for K replies, no matter the quality of replies, success/err
 func wait_for{Logger}(success: u8, error: u8) -> Yield:
   l2 = prefixed{Logger}("Yield.wait_for")
   log = l2.log
 
-  wait = func (ws: *Worker, err: *Error, cb: Worker -> ?Error) -> Promise:
+  wait = func (ws: *Worker, err: %Error, cb: Worker -> ?Error) -> Promise:
     yield = func () -> ?Error:
       ok: *bool
       log(["is called"])
@@ -30,20 +32,26 @@ func wait_for{Logger}(success: u8, error: u8) -> Yield:
         if e == nil:
           ok <<- true
         else:  
-          pushAll(err, e)
+          appendToMapKey(err, e, w.worker_id!)
 
       -- TODO not absolutely correct:
       -- ignores errors that happen BEFORE we can reach workers
       -- but they might be fatal
-      join ok[success-1]
-      par join err[error-1]
+      ks = err.keysStream()
+      fs = err.getStream(FATAL)
 
-      log(["Joined", err, err.length, error])
+      join ok[success-1]
+      par join ks[error-1]
+      par join fs!
+
+      log(["Joined!", fs, ks, ok])
 
       new_error: *Error
-      if err.length >= error:
-        pushAll(new_error, err)
+      if err.keys().length >= error:
+        mapToStream(err, new_error)
         --log(["Finally, errored!", new_error])
+      if err.contains(FATAL):
+        pushAll(new_error, err.get(FATAL))  
 
       <- new_error
     <- Promise(yield = yield)
