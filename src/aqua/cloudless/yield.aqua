@@ -44,7 +44,6 @@ func wait_for{Logger}(success: u8, error: u8) -> Yield:
       par join ks[error-1]
       par join fs!
 
-      --log(["Joined", err, err.length, error])
       log(["Joined!", fs, ks, ok])
 
       new_error: *Error
