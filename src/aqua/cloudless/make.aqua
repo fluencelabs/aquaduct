@@ -1,9 +1,9 @@
-aqua Cloudless_Make declares simple, disjoint
+aqua Cloudless.Make declares simple, disjoint
 
 import PeerId, Op from "@fluencelabs/aqua-lib/builtin.aqua"
 import Subnet, Worker from "@fluencelabs/aqua-lib/subnet.aqua"
 import Worker as WLibW from "@fluencelabs/aqua-lib/workers.aqua"
-import pushAll, optOr, contains, pushAllToKey from "../utils"
+import pushAll, optOr, contains, appendToMapKey from "../utils"
 import Function, DealId from "core"
 
 import Error, Promise from "../promise"
@@ -58,7 +58,7 @@ func prepareHostForTheJob{Logger, Promise}(deal_id: DealId, errors: %Error, pid:
   if w_is_active! == true:
     prev_errors <- Promise.yield()
     if prev_errors != nil:
-      pushAllToKey(errors, prev_errors, pid)
+      appendToMapKey(errors, prev_errors, pid)
       Logger.log(["Prev errors prevent host from executing a worker"])
       is_active_opt <<- false
     else:
@@ -135,7 +135,7 @@ func disjoint{Compute, Logger}(peers: []PeerId, yield: Yield) -> Function:
       -- TODO should we yield it on workers instead? I think we don't
       prev_err <- prev.yield()
       -- TODO should it be non-fatal?
-      pushAllToKey(errors, prev_err, FATAL)
+      appendToMapKey(errors, prev_err, FATAL)
 
       -- Independent resolve on every peer -- triggers moving to p
       p_workers <- resolveSubnet{Logger}(deal_id, errors)

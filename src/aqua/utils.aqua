@@ -24,11 +24,11 @@ func pushAll(stream: *string, add: []string):
     stream <<- a
 
 -- add is a scalar, so no canonicalization happens, no move
-func pushAllToKey(map: %string, add: []string, key: string):
+func appendToMapKey(map: %string, add: []string, key: string):
   for a <- add:
     map <<- key, a  
 
-func pushAllToMap(map: %string, push: %string):
+func mergeMaps(map: %string, push: %string):
   for k, v <- push:
     map <<- k, v     
 

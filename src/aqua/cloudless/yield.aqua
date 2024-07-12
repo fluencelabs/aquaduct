@@ -1,15 +1,15 @@
-aqua Cloudless_Yield declares *
+aqua Cloudless.Yield declares *
 
 import Worker from "@fluencelabs/aqua-lib/subnet.aqua"
 import Promise, Error from "../promise"
-import pushAll, pushAllToKey, mapToStream from "../utils"
+import pushAll, appendToMapKey, mapToStream from "../utils"
 import Logger, prefixed from "../logger"
 
 alias WorkerYield: Worker -> ?Error
 alias Yield: *Worker, %Error, WorkerYield -> Promise
 
 --
--- Strategies for Cloudless Functions
+-- Yielding Strategies for Cloudless Functions – distinguishing success state from error state
 --
 
 const FATAL = "fatal"
@@ -32,7 +32,7 @@ func wait_for{Logger}(success: u8, error: u8) -> Yield:
         if e == nil:
           ok <<- true
         else:  
-          pushAllToKey(err, e, w.worker_id!)
+          appendToMapKey(err, e, w.worker_id!)
 
       -- TODO not absolutely correct:
       -- ignores errors that happen BEFORE we can reach workers

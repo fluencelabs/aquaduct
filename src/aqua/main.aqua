@@ -79,9 +79,9 @@ func cloudless() -> []Error, []Result:
   -- Simple and disjoint both call function on all workers in parallel.
   -- Disjoint can be used to protect from censoring your subnet by getting to subnet workers through disjoint paths.
   -- Simple resolves the subnet on a single given peer, or, if omitted, on the relay.
-  -- Cloudless_Yield.wait_for_k will wait for this number of responses before considering success.
-  --fn = Cloudless_Make.simple{comp, logger}(Cloudless_Yield.wait_for{logger}(2, 1))
-  fn = Cloudless_Make.disjoint{comp, logger}([HOST_PEER_ID], Cloudless_Yield.wait_for{logger}(2, 1))
+  -- Cloudless.Yield.wait_for_k will wait for this number of responses before considering success.
+  --fn = Cloudless.Make.simple{comp, logger}(Cloudless.Yield.wait_for{logger}(2, 1))
+  fn = Cloudless.Make.disjoint{comp, logger}([HOST_PEER_ID], Cloudless.Yield.wait_for{logger}(2, 1))
 
   --
   -- Execute Cloud Function
@@ -92,8 +92,8 @@ func cloudless() -> []Error, []Result:
   -- First argument is your deal id to resolve the deployed subnet.
   -- Second argument is where the function will yield. It's more efficient to do it on HOST_PEER_ID, but can do it on INIT_PEER_ID if you like.
   Console.print(["Execution begins now"])
-  errs <- Cloudless_Exec.roundtrip{fn, logger}(dealId, ?[HOST_PEER_ID])
-  --Cloudless_Exec.fireAndForget{fn}(dealId)
+  errs <- Cloudless.Exec.roundtrip{fn, logger}(dealId, ?[HOST_PEER_ID])
+  --Cloudless.Exec.fireAndForget{fn}(dealId)
   --errs = nil
   --Console.print(["Errors after roundtrip:", errs])
 
