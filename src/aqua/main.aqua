@@ -14,7 +14,7 @@ use "cloudless/yield"
 use "compute"
 import Error from "promise"
 import local as make_logger, prefixed_log from "logger"
-import prepend from "utils"
+import prepend, mapToStream from "utils"
 
 
 -- DOCUMENTATION:
@@ -26,7 +26,7 @@ export cloudless
 alias Result: string
 
 -- Mind the return type: it could be different
-func cloudless() -> []Result:
+func cloudless() -> []Error, []Result:
   --
   -- Read deal info from configuration – need to deploy first
   --
@@ -100,8 +100,6 @@ func cloudless() -> []Result:
     Console.print(new_errs)
 
   -- Results are collected into your res variable. Now it should be ready to use, filled with values.
-  -- Please note that errors handling is ignored in this example, which may hurt in the real life.
   res_stream: *Result
-  for k, v <- res:
-    res_stream <<- v
-  <- res_stream
+  mapToStream(res, res_stream)
+  <- errs, res_stream
