@@ -93,6 +93,8 @@ func cloudless() -> []Error, []Result:
   -- Second argument is where the function will yield. It's more efficient to do it on HOST_PEER_ID, but can do it on INIT_PEER_ID if you like.
   Console.print(["Execution begins now"])
   errs <- Cloudless_Exec.roundtrip{fn, logger}(dealId, ?[HOST_PEER_ID])
+  --Cloudless_Exec.fireAndForget{fn}(dealId)
+  --errs = nil
   --Console.print(["Errors after roundtrip:", errs])
 
   if errs != nil:

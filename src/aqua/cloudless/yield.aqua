@@ -37,12 +37,15 @@ func wait_for{Logger}(success: u8, error: u8) -> Yield:
       -- TODO not absolutely correct:
       -- ignores errors that happen BEFORE we can reach workers
       -- but they might be fatal
+      ks = err.keysStream()
+      fs = err.getStream(FATAL)
+
       join ok[success-1]
-      par join err.keysStream()[error-1]
-      par join err.getStream(FATAL)!
+      par join ks[error-1]
+      par join fs!
 
       --log(["Joined", err, err.length, error])
-      log(["Joined"])
+      log(["Joined!", fs, ks, ok])
 
       new_error: *Error
       if err.keys().length >= error:
