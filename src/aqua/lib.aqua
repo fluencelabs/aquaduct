@@ -1,4 +1,4 @@
-aqua Aquaduct declares Exec
+aqua Aquaduct declares *
 
 import Promise from "promise"
 use "cloudless/exec" as Exec
